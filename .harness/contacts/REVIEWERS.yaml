@@ -1,0 +1,41 @@
+version: 1
+reviewers:
+  - id: reviewer
+    name: Reviewer
+    agent: .harness/agents/REVIEWER.md
+    scope:
+      - "**/*"
+    triggers:
+      - pull_request
+      - manual_review
+    responsibilities:
+      - architecture-boundaries
+      - pattern-reuse
+      - regression-risk
+  - id: tester
+    name: Tester
+    agent: .harness/agents/TESTER.md
+    scope:
+      - "**/*"
+    triggers:
+      - behavior_change
+      - test_gap
+    responsibilities:
+      - test-coverage
+      - smoke-verification
+  - id: doc-gardener
+    name: Doc Gardener
+    agent: .harness/agents/DOC-GARDENER.md
+    scope:
+      - ".harness/**/*.md"
+      - "AGENTS.md"
+    triggers:
+      - weekly
+      - knowledge_change
+      - doc_health_failure
+      - capture_pending
+    responsibilities:
+      - stale-docs
+      - broken-references
+      - knowledge-drift
+      - pending-capture

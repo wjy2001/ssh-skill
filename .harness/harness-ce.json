@@ -1,0 +1,67 @@
+﻿{
+    "version":  "1.0.0",
+    "updatedAt":  "2026-07-06T07:31:46.4163211Z",
+    "baselineDir":  ".harness/.harness-ce/baseline",
+    "files":  {
+                  ".harness/templates/tasks/PROGRESS.md":  {
+                                                               "owner":  "managed",
+                                                               "templateHash":  "f83e8a84b49daea01ab6544f2742381101b5cea42f5b056558c4c091d46c238f",
+                                                               "baselinePath":  ".harness/.harness-ce/baseline/.harness/templates/tasks/PROGRESS.md"
+                                                           },
+                  ".harness/templates/tasks/design.md":  {
+                                                             "owner":  "managed",
+                                                             "templateHash":  "97dbd32a98865ed762d6a74cc92cb71ac97ddc3c04780e74a13136150a10982b",
+                                                             "baselinePath":  ".harness/.harness-ce/baseline/.harness/templates/tasks/design.md"
+                                                         },
+                  ".harness/templates/tasks/implementation.md":  {
+                                                                     "owner":  "managed",
+                                                                     "templateHash":  "4029a112817575de83305e1fbeb8d4750583890ae5aefd50deb8e23363e5eb6e",
+                                                                     "baselinePath":  ".harness/.harness-ce/baseline/.harness/templates/tasks/implementation.md"
+                                                                 },
+                  ".harness/knowledge/CONFIG.md":  {
+                                                       "owner":  "user",
+                                                       "templateHash":  "b6b8c2a3cdd3605f0dfed882a161d7346c2b094f234f16238b9c88b5358bf7f2",
+                                                       "baselinePath":  ".harness/.harness-ce/baseline/.harness/knowledge/CONFIG.md"
+                                                   },
+                  ".harness/knowledge/GLOSSARY.md":  {
+                                                         "owner":  "user",
+                                                         "templateHash":  "80f19b2881826884ed31f52fa37b4dfaef3328dfd86f7533991eafb0d264373b",
+                                                         "baselinePath":  ".harness/.harness-ce/baseline/.harness/knowledge/GLOSSARY.md"
+                                                     },
+                  ".harness/agents/ORCHESTRATOR.md":  {
+                                                          "owner":  "semi-managed",
+                                                          "templateHash":  "3f5dff75c928828e4c3aa298805e6b081785bbe8e40d39246bc45fd69bb8bc34",
+                                                          "baselinePath":  ".harness/.harness-ce/baseline/.harness/agents/ORCHESTRATOR.md"
+                                                      },
+                  ".harness/agents/REVIEWER.md":  {
+                                                      "owner":  "semi-managed",
+                                                      "templateHash":  "9058f28cf92677efd7b42f48d915751cc88f634a9457fb9fcb29a1e5512e5c76",
+                                                      "baselinePath":  ".harness/.harness-ce/baseline/.harness/agents/REVIEWER.md"
+                                                  },
+                  ".harness/agents/TESTER.md":  {
+                                                    "owner":  "semi-managed",
+                                                    "templateHash":  "1116d4714c6bc4f5ff8bb4bacde4ce4ec02307f1d3dd7d89a015fd1599ad63e2",
+                                                    "baselinePath":  ".harness/.harness-ce/baseline/.harness/agents/TESTER.md"
+                                                },
+                  ".harness/agents/DOC-GARDENER.md":  {
+                                                          "owner":  "semi-managed",
+                                                          "templateHash":  "3db8abf686e373749aa833ba1cab8d276cd9396e083722832535d00c0d745f0b",
+                                                          "baselinePath":  ".harness/.harness-ce/baseline/.harness/agents/DOC-GARDENER.md"
+                                                      },
+                  ".harness/contacts/REVIEWERS.yaml":  {
+                                                           "owner":  "semi-managed",
+                                                           "templateHash":  "c73096cdf10c0d04e1e4ade87fc4d577aa4cd7fd407cbe3fc43d71ef80547bf7",
+                                                           "baselinePath":  ".harness/.harness-ce/baseline/.harness/contacts/REVIEWERS.yaml"
+                                                       },
+                  ".harness/templates/ExperienceAccumulation.md":  {
+                                                                       "owner":  "managed",
+                                                                       "templateHash":  "f03f8d1c6c34add6ef103416e4da1f73dc1502da7ab2030b628153067e198649",
+                                                                       "baselinePath":  ".harness/.harness-ce/baseline/.harness/templates/ExperienceAccumulation.md"
+                                                                   },
+                  ".harness/tools/validate-harness-context.py":  {
+                                                                     "owner":  "managed",
+                                                                     "templateHash":  "bd3441f9aaac90f6b32e9ac4a8ad4e84dc94eb0ab4d9b60b30d57b993cf54cbd",
+                                                                     "baselinePath":  ".harness/.harness-ce/baseline/.harness/tools/validate-harness-context.py"
+                                                                 }
+              }
+}
