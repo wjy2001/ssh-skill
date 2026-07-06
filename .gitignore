@@ -1,7 +1,9 @@
 # Binary output
 bin/ssh-mcp
 bin/ssh-mcp.exe
-*.exe
+
+# Harness CE task workspaces (transient artifacts)
+.harness/tasks/
 
 # Go build artifacts
 go/bin/
