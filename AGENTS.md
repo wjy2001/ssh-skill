@@ -28,7 +28,7 @@
 每次任务开始前，先验证以下环境可用：
 
 - **包管理器**：Go modules（`go mod tidy`）
-- **运行时版本**：Go 1.25+（参考 `go/go.mod`）
+- **运行时版本**：Go 1.18+（参考 `go/go.mod`）
 - **锁定文件**：`go/go.sum`
 - **安装命令**：`cd go && go mod download`
 

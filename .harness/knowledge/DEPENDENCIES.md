@@ -11,7 +11,7 @@
 - **用途**：SSH 客户端连接（password/key/agent 认证）、AES-256-GCM 加解密、Argon2id 密钥派生
 - **所属层**：Repo / Service
 - **升级策略**：人工审核
-- **风险点**：Go 1.25+ 要求；API 稳定性高，breaking change 罕见
+- **风险点**：当前锁定 v0.17.0（2023-02，对应 Go 1.18 最低要求）；升级到 v0.21.0+ 会要求 Go 1.20，v0.31.0+ 要求 Go 1.22，v0.53.0+ 要求 Go 1.25。API 稳定性高，breaking change 罕见。
 - **替代方案**：无（Go 生态唯一成熟 SSH 和加密实现）
 - **验证方式**：`go test ./internal/ssh/...` + `go test ./internal/vault/...`
 
@@ -19,9 +19,9 @@
 - **用途**：SFTP 文件上传/下载
 - **所属层**：Repo
 - **升级策略**：人工审核
-- **风险点**：间接依赖 `golang.org/x/crypto`，API 稳定
+- **风险点**：当前锁定 v1.13.5（对应 Go 1.15）；v1.13.10+ 要求 Go 1.23。间接依赖 `golang.org/x/crypto`，需与 x/crypto 版本协同
 - **替代方案**：纯 SCP 实现（基于 `x/crypto/ssh`），但 SFTP 更可靠
-- **验证方式**：集成测试（SSH 测试容器）
+- **验证方式**：集成测试（in-process SSH server，见 `internal/ssh/exec_test.go`）
 
 ### `golang.org/x/sys`
 - **用途**：`x/crypto` 的间接依赖
@@ -34,9 +34,9 @@
 ### Go 运行时
 - **用途**：编译和运行 ssh-mcp 二进制
 - **所属层**：Runtime
-- **升级策略**：跟随 go.mod 声明的最低版本
-- **风险点**：Go 1.25+ 需要较新工具链
-- **替代方案**：可尝试降低 `x/crypto` 版本以支持更低 Go 版本
+- **升级策略**：跟随 go.mod 声明的最低版本（当前 Go 1.18）
+- **风险点**：Go 1.18 于 2022-03 发布，已停止官方支持但生态广泛可用；如需升级 Go 版本，同步升级 `x/crypto` 到匹配版本
+- **替代方案**：可尝试降级 `x/crypto` 到 v0.14.0 或更早以支持 Go 1.17，但会丢失 ssh 包安全补丁
 - **验证方式**：`go version` + `go build ./cmd/ssh-mcp/`
 
 ## 依赖模板
