@@ -15,7 +15,7 @@ Secure SSH remote operations for AI agents (Claude Code).
 
 ## Installation
 
-> ssh-mcp is a Go CLI. There are **no pre-built binary downloads** — build from source. This keeps the distribution transparent, auditable, and lets you pin to any commit. Requires Go 1.25+.
+> ssh-mcp is a Go CLI. There are **no pre-built binary downloads** — build from source. This keeps the distribution transparent, auditable, and lets you pin to any commit. Requires Go 1.18+ (released March 2022).
 
 ### Build from source (recommended)
 
@@ -127,7 +127,7 @@ ssh-skill/
 
 ## Requirements
 
-- Go 1.25+
+- Go 1.18+
 - Target servers must run standard OpenSSH
 
 ## License
