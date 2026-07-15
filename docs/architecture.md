@@ -61,9 +61,9 @@ ssh-skill/
 │       │   ├── keygen.go         # 密钥生成（Argon2id）
 │       │   └── storage.go        # 配置文件读写
 │       ├── ssh/
-│       │   ├── client.go         # SSH 连接管理（多认证）
-│       │   ├── exec.go           # 远程命令执行
-│       │   └── transfer.go       # SFTP 文件传输
+│       │   ├── client.go           # SSH 连接管理（Client 包装类型 + bastion 生命周期）
+│       │   ├── exec.go             # 远程命令执行（ExitCode 透传 via *ssh.ExitError）
+│       │   └── transfer.go         # SFTP 文件传输（进度回调）
 │       ├── audit/
 │       │   └── audit.go          # JSONL 审计日志写入
 │       └── cli/
@@ -71,16 +71,19 @@ ssh-skill/
 │           ├── add.go            # add 子命令
 │           ├── remove.go         # remove 子命令
 │           ├── list.go           # list 子命令
-│           ├── exec.go           # exec 子命令
+│           ├── exec.go           # exec 子命令（解密后 cfg 直传 ssh.Exec）
 │           ├── upload.go         # upload 子命令
 │           ├── download.go       # download 子命令
 │           ├── test.go           # test 子命令
 │           ├── vault.go          # vault 子命令组
-│           └── serve.go          # MCP 服务模式
+│           ├── helpers.go        # resolveServer 公共解密工具
+│           ├── progress.go       # 传输进度条渲染
+│           └── serve.go          # MCP 服务模式（未实现）
 ├── .claude/skills/ssh-ops/       # Claude Code 技能定义
-│   └── SKILL.md                  # 技能描述、安全规则、工作流
+│   ├── SKILL.md                  # 技能描述、安全规则、工作流
+│   └── bin/                      # 编译产物
+├── scripts/                      # 跨平台构建脚本
 ├── docs/                         # 项目文档（你在读的）
-├── bin/                          # 构建产物
 └── .harness/                     # Harness CE 任务管理
     ├── knowledge/                # AI agent 知识库
     ├── agents/                   # Agent 行为规范
@@ -98,16 +101,18 @@ ssh-skill/
     │ ssh-mcp exec --server X --command "uptime"
     ▼
 cli/exec.go
-    │ 解析参数、从 vault 加载服务器配置
-    ▼
-vault/vault.go
-    │ 读取 .vault-key → 解密 servers.json.age → 返回 ServerConfig
-    ▼
-ssh/client.go
-    │ 根据 AuthConfig 建立 SSH 连接（password/key/agent）
+    │ resolveServer() → 从 vault 加载服务器 + AES-256-GCM 解密密码（in-memory plaintext）
     ▼
 ssh/exec.go
-    │ 执行命令 → 收集 stdout/stderr/exit_code/duration
+    │ 接收已解密的 cfg，不再二次查找 vault
+    ▼
+ssh/client.go
+    │ Connect() → 根据 AuthConfig 建立 SSH 连接（password/key/agent）
+    │   返回 *Client 包装类型，持有 bastion 引用以管理生命周期
+    ▼
+ssh/exec.go
+    │ session.Run() → 收集 stdout/stderr/exit_code/duration
+    │   errors.As(*ssh.ExitError) 提取真实退出码
     ▼
 audit/audit.go
     │ 写入 JSONL 记录到 audit.log
@@ -122,13 +127,17 @@ exit code: 0
 ssh-mcp upload --server X --local ./app.tar.gz --remote /tmp/
     │
     ▼
-ssh/client.go → SSH 连接
+cli/exec.go → resolveServer() → 解密 cfg
+    │
+    ▼
+ssh/client.go → Connect() 返回 *Client
     │
     ▼
 ssh/transfer.go → SFTP 客户端（github.com/pkg/sftp）
-    │ 打开本地文件 → 创建远程文件 → 流式复制
+    │ progressReader 包装 io.Reader，每 100ms 触发回调
+    │ io.CopyBuffer + 256KB 缓冲
     ▼
-audit/audit.go → 记录传输操作
+cli/progress.go → 渲染进度条到 stderr
 ```
 
 ## 外部依赖

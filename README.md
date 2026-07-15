@@ -15,14 +15,50 @@ Secure SSH remote operations for AI agents (Claude Code).
 
 ## Installation
 
-```bash
-# Clone and build
-git clone <repo-url>
-cd ssh-skill/go
-go build -o ~/bin/ssh-mcp ./cmd/ssh-mcp/
+> ssh-mcp is a Go CLI. There are **no pre-built binary downloads** — build from source. This keeps the distribution transparent, auditable, and lets you pin to any commit. Requires Go 1.25+.
 
-# Or use pre-built binary (place in PATH)
-# ssh-mcp is a single static binary, no runtime dependencies
+### Build from source (recommended)
+
+```bash
+git clone <your-fork-or-mirror-url> ssh-skill
+cd ssh-skill
+
+# Linux / macOS
+./scripts/build.sh
+
+# Windows (PowerShell)
+.\scripts\build.ps1
+```
+
+The build script compiles `go/cmd/ssh-mcp/` into `.claude/skills/ssh-ops/bin/ssh-mcp` (or `ssh-mcp.exe` on Windows). No external dependencies beyond the Go toolchain.
+
+### Manual build
+
+If you prefer not to use the build script:
+
+```bash
+cd go
+go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
+```
+
+### Install the Claude Code skill globally
+
+After building, copy the skill directory into your global Claude skills folder so any project can use it:
+
+```bash
+# Linux / macOS
+mkdir -p ~/.claude/skills/ssh-ops
+cp -r .claude/skills/ssh-ops/SKILL.md .claude/skills/ssh-ops/bin ~/.claude/skills/ssh-ops/
+
+# Windows (PowerShell)
+New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.claude\skills\ssh-ops
+Copy-Item .claude\skills\ssh-ops\SKILL.md, .claude\skills\ssh-ops\bin $env:USERPROFILE\.claude\skills\ssh-ops\ -Recurse -Force
+```
+
+Verify the binary is on your PATH or referenced by the skill:
+
+```bash
+ssh-mcp --version
 ```
 
 ## Quick Start
@@ -46,22 +82,14 @@ ssh-mcp list
 
 ## Claude Code Integration
 
-Add the `ssh-ops` skill to your project or global skills directory:
-
-```bash
-# Copy the skill definition
-mkdir -p .claude/skills/ssh-ops/
-cp path/to/ssh-skill/.claude/skills/ssh-ops/SKILL.md .claude/skills/ssh-ops/
-```
-
-Claude Code will automatically use the skill when you ask to perform SSH operations.
+The `ssh-ops` skill is self-contained under `.claude/skills/ssh-ops/` (binary built locally). After running the build script, Claude Code will automatically use the skill when you ask to perform SSH operations — no installer download required.
 
 ## Security Model
 
-- **Threat model**: Defends against passive credential leakage (environment variables, chat history). Does not defend against active attacks (AI reading vault key file via Bash).
-- **Encryption**: AES-256-GCM with Argon2id key derivation. Random 32-byte key generated on first run.
+- **Threat model**: Defends against passive credential leakage (environment variables, chat history, plaintext config files) and AI hallucination attacks (connecting to unauthorized servers). Does **not** defend against MITM (host key verification currently disabled) or active attacks where an attacker reads the vault key file via Bash. See [`docs/security.md`](./docs/security.md) for the full model.
+- **Encryption**: AES-256-GCM with Argon2id key derivation (time=3, memory=64MB, threads=4). Random 32-byte key generated on first run.
 - **Storage**: All data in `~/.ssh-mcp/` with 0600 file permissions.
-- **Audit**: Every command execution is logged with timestamp, server, command, exit code, and duration.
+- **Audit**: Every command execution is logged with timestamp, server, command, exit code, stdout/stderr length, and duration.
 
 ## Commands
 
@@ -75,7 +103,8 @@ Claude Code will automatically use the skill when you ask to perform SSH operati
 | `ssh-mcp download --server <id> --remote <p> --local <p>` | Download a file |
 | `ssh-mcp test --server <id>` | Test SSH connection |
 | `ssh-mcp vault init` | Initialize vault and key |
-| `ssh-mcp serve` | MCP server mode (experimental) |
+| `ssh-mcp --version, -V` | Print version |
+| `ssh-mcp serve` | MCP server mode (not yet implemented) |
 
 ## Project Structure
 
@@ -87,11 +116,12 @@ ssh-skill/
 │       ├── types/                # Shared data types
 │       ├── config/               # Configuration resolution
 │       ├── vault/                # AES-256-GCM encryption + key management
-│       ├── ssh/                  # SSH client, exec, file transfer
+│       ├── ssh/                  # SSH client (Client wrapper + bastion lifecycle), exec, transfer
 │       ├── audit/                # JSONL audit logging
 │       └── cli/                  # CLI subcommands
-├── .claude/skills/ssh-ops/       # Claude Code skill definition
-├── bin/                          # Build artifacts
+├── .claude/skills/ssh-ops/       # Claude Code skill (SKILL.md + bin/ build output)
+├── scripts/                      # Cross-platform build scripts (build.sh, build.ps1)
+├── docs/                         # Project documentation
 └── .harness/                     # Harness CE task management
 ```
 

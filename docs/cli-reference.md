@@ -21,7 +21,6 @@ audience: [所有开发者, 日常使用者]
 | 命令 | 用途 | 需要 Vault |
 |------|------|-----------|
 | `vault init` | 初始化加密保险库 | — |
-| `vault status` | 查看 vault 状态 | ✅ |
 | `add` | 添加服务器配置 | ✅ |
 | `remove` | 删除服务器配置 | ✅ |
 | `list` | 列出所有已配置服务器 | ✅ |
@@ -29,7 +28,7 @@ audience: [所有开发者, 日常使用者]
 | `upload` | 上传文件到远程服务器 | ✅ |
 | `download` | 从远程服务器下载文件 | ✅ |
 | `test` | 测试 SSH 连接 | ✅ |
-| `serve` | 启动 MCP 服务模式（实验性） | ✅ |
+| `serve` | 启动 MCP 服务模式（**未实现**,仅占位） | ✅ |
 
 ---
 
@@ -38,29 +37,15 @@ audience: [所有开发者, 日常使用者]
 初始化加密保险库，创建 `~/.ssh-mcp/` 目录和加密密钥。
 
 ```bash
-ssh-mcp vault init [flags]
+ssh-mcp vault init
 ```
 
 **行为**：
-- 如果 vault 已存在，提示错误（不会覆盖）
+- 幂等：如果 vault 已存在，重新生成空 servers 列表（保留旧密钥）
 - 生成 32 字节随机 AES-256 密钥
 - 创建空加密配置文件
 
-**标志**：
-
-| 标志 | 类型 | 默认 | 说明 |
-|------|------|------|------|
-| `--config-dir` | string | `~/.ssh-mcp/` | 自定义配置目录 |
-
----
-
-## vault status
-
-查看 vault 状态，包括密钥存在性、服务器数量等。
-
-```bash
-ssh-mcp vault status [flags]
-```
+> 配置目录可通过 `SSH_MCP_CONFIG_DIR` 环境变量覆盖，**不接受命令行 flag**（这是有意设计，避免每个命令都要重复解析 config-dir flag）。
 
 ---
 
@@ -77,21 +62,20 @@ ssh-mcp add [flags]
 | 标志 | 类型 | 说明 |
 |------|------|------|
 | `--id` | string | 服务器唯一标识（后续命令引用） |
-| `--name` | string | 人类可读名称 |
 | `--host` | string | 主机名或 IP 地址 |
-| `--user` | string | SSH 登录用户名 |
 | `--auth-type` | string | 认证方式：`password`、`key`、`agent` |
 
 **可选标志**：
 
 | 标志 | 类型 | 默认 | 说明 |
 |------|------|------|------|
+| `--name` | string | 空 | 人类可读名称 |
 | `--port` | int | `22` | SSH 端口 |
-| `--password` | string | — | 密码（auth-type=password 时必需） |
-| `--key-path` | string | `~/.ssh/id_rsa` | 私钥路径（auth-type=key 时使用） |
-| `--key-passphrase` | string | — | 私钥密码（如有） |
-| `--bastion-id` | string | — | 跳板机服务器 ID |
-| `--config-dir` | string | `~/.ssh-mcp/` | 自定义配置目录 |
+| `--user` | string | `root` | SSH 登录用户名 |
+| `--password` | string | — | 密码（auth-type=password 时必需，加密后存储） |
+| `--key-path` | string | — | 私钥路径（auth-type=key 时使用，支持 `~` 展开） |
+
+> 注：当前实现不支持 `--key-passphrase`、`--bastion-id`、`--config-dir` 等 flag（虽然代码中 `types.BastionConfig` 类型已定义，但 CLI 未暴露添加入口）。如需 bastion，需手动编辑 vault JSON 后重新加密。
 
 ---
 
@@ -100,7 +84,7 @@ ssh-mcp add [flags]
 删除服务器配置。
 
 ```bash
-ssh-mcp remove --id <server-id> [flags]
+ssh-mcp remove --id <server-id>
 ```
 
 **必需标志**：
@@ -128,7 +112,7 @@ ssh-mcp list [flags]
 在远程服务器执行命令。**此命令会触发 Claude Code 审批对话框。**
 
 ```bash
-ssh-mcp exec --server <id> --command <cmd> [flags]
+ssh-mcp exec --server <id> --command <cmd>
 ```
 
 **必需标志**：
@@ -143,9 +127,8 @@ ssh-mcp exec --server <id> --command <cmd> [flags]
 | 标志 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `--timeout` | int | `30` | 命令超时（秒） |
-| `--config-dir` | string | `~/.ssh-mcp/` | 自定义配置目录 |
 
-**退出码**：远程命令的退出码透传。`255` 表示连接或执行错误。
+**退出码**：远程命令的退出码透传（0 表示成功，非零表示远程命令失败）。`255` 或 `-1` 表示连接或会话创建失败（非远程命令本身的退出码）。
 
 ---
 
@@ -205,19 +188,15 @@ ssh-mcp test --server <id> [flags]
 
 ## serve
 
-启动 MCP（Model Context Protocol）服务模式（实验性）。
+启动 MCP（Model Context Protocol）服务模式。**当前未实现**，运行时仅打印提示信息：
 
-```bash
-ssh-mcp serve [flags]
+```
+MCP server mode is not yet implemented.
+Use the CLI subcommands directly, or configure as an MCP server with:
+  claude mcp add ssh-mcp -- /path/to/ssh-mcp serve
 ```
 
-以 MCP 协议对外暴露工具调用接口，允许 AI agent 通过标准协议调用 SSH 操作。
-
-**可选标志**：
-
-| 标志 | 类型 | 默认 | 说明 |
-|------|------|------|------|
-| `--config-dir` | string | `~/.ssh-mcp/` | 自定义配置目录 |
+后续版本将通过 stdio 暴露 MCP 工具调用接口，使 AI agent 可经标准协议调用 SSH 操作。当前请直接使用 CLI 子命令。
 
 ---
 

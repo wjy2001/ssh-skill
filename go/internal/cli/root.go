@@ -12,6 +12,17 @@ import (
 	"ssh-mcp/internal/vault"
 )
 
+// version holds the build-injected version string. Set via SetVersion() from
+// main.go. Defaults to "dev" when built from source without ldflags.
+var version = "dev"
+
+// SetVersion is called by main.go to inject the build-time version string.
+func SetVersion(v string) {
+	if v != "" {
+		version = v
+	}
+}
+
 // App holds the runtime state shared across all subcommands.
 type App struct {
 	Vault      *types.Vault
@@ -102,6 +113,9 @@ func Run(args []string) error {
 		return cmdVault(cmdArgs)
 	case "serve":
 		return cmdServe(cmdArgs)
+	case "--version", "-V":
+		fmt.Printf("ssh-mcp %s\n", version)
+		return nil
 	case "--help", "-h", "help":
 		printUsage()
 		return nil
@@ -124,7 +138,8 @@ Usage:
   ssh-mcp download --server <id> --remote <path> --local <path>  Download a file
   ssh-mcp test --server <id>      Test SSH connection
   ssh-mcp vault init              Initialize vault key and config
-  ssh-mcp serve                   Start MCP server mode (experimental)
+  ssh-mcp serve                   Start MCP server mode (not yet implemented)
+  ssh-mcp --version, -V           Print version
 
 Use 'ssh-mcp <command> --help' for detailed options.`)
 }

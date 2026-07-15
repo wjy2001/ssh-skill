@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"ssh-mcp/internal/ssh"
 )
@@ -31,11 +32,17 @@ func cmdDownload(args []string) error {
 		return err
 	}
 
-	result, err := ssh.Download(context.Background(), cfg, *remotePath, *localPath)
+	// Show progress bar during transfer.
+	result, err := ssh.Download(context.Background(), cfg, *remotePath, *localPath,
+		func(transferred, total int64, elapsed time.Duration) {
+			renderProgress("Downloading", transferred, total, elapsed)
+		})
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "\n")
 		return err
 	}
 
+	finishProgress("Downloading", result.SizeBytes, time.Duration(result.DurationMs)*time.Millisecond)
 	fmt.Printf("Downloaded %d bytes from %s:%s (%dms)\n", result.SizeBytes, result.ServerID, result.Path, result.DurationMs)
 	return nil
 }

@@ -3,6 +3,7 @@ package ssh
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,16 +12,18 @@ import (
 	"ssh-mcp/internal/types"
 )
 
-// Exec runs a command on the remote server and returns the result.
-// It handles target validation (server must exist in the vault) and timeout control.
-func Exec(ctx context.Context, vault *types.Vault, serverID, command string, timeout time.Duration) (*types.ExecResult, error) {
-	cfg, err := FindServer(vault, serverID)
-	if err != nil {
-		return nil, err
-	}
-
+// Exec runs a command on the remote server described by cfg and returns the
+// result. The cfg.Auth field MUST already contain decrypted credentials —
+// password decryption is the caller's responsibility (cli layer). This avoids
+// a double lookup against the raw (still-encrypted) vault.
+//
+// ExitCode handling: a non-zero remote exit produces *ssh.ExitError from
+// session.Run(); we surface its ExitStatus() and still return the captured
+// stdout/stderr. Other errors (connection, session creation) leave ExitCode
+// at -1 and are also returned via err so the caller can distinguish them.
+func Exec(ctx context.Context, cfg *types.ServerConfig, command string, timeout time.Duration) (*types.ExecResult, error) {
 	result := &types.ExecResult{
-		ServerID: serverID,
+		ServerID: cfg.ID,
 		Command:  command,
 		ExitCode: -1,
 	}
@@ -35,12 +38,14 @@ func Exec(ctx context.Context, vault *types.Vault, serverID, command string, tim
 
 	client, err := Connect(connCtx, cfg)
 	if err != nil {
+		result.DurationMs = time.Since(start).Milliseconds()
 		return result, err
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
+		result.DurationMs = time.Since(start).Milliseconds()
 		return result, fmt.Errorf("create session: %w", err)
 	}
 	defer session.Close()
@@ -49,33 +54,28 @@ func Exec(ctx context.Context, vault *types.Vault, serverID, command string, tim
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 
-	err = session.Run(command)
+	runErr := session.Run(command)
 	result.DurationMs = time.Since(start).Milliseconds()
-
-	if err != nil {
-		if exitErr, ok := err.(*ExitError); ok {
-			result.ExitCode = exitErr.ExitStatus()
-		}
-		// err is set but we still return the result — the caller inspects ExitCode.
-	}
-
 	result.Stdout = stdout.String()
 	result.Stderr = stderr.String()
 
-	// If no exit error was detected but err is set, return it.
-	if result.ExitCode == -1 && err != nil {
-		result.Stderr += fmt.Sprintf("\n[ssh-mcp] %v", err)
+	// Non-zero remote exit: extract the real exit code and DO NOT treat as
+	// a Go-side error — the caller inspects ExitCode. We still return nil err
+	// so the CLI can print stdout/stderr cleanly.
+	var exitErr *ssh.ExitError
+	if errors.As(runErr, &exitErr) {
+		result.ExitCode = exitErr.ExitStatus()
+		return result, nil
 	}
 
+	// Genuine error (connection lost, parse failure, etc.): keep ExitCode at -1
+	// and surface the error to the caller.
+	if runErr != nil {
+		result.Stderr += fmt.Sprintf("\n[ssh-mcp] %v", runErr)
+		return result, runErr
+	}
+
+	// Clean success.
+	result.ExitCode = 0
 	return result, nil
-}
-
-// ExitError wraps ssh.ExitError for consistent type assertions.
-type ExitError struct {
-	*ssh.ExitError
-}
-
-// ExitStatus returns the exit code from the remote command.
-func (e *ExitError) ExitStatus() int {
-	return e.ExitError.ExitStatus()
 }

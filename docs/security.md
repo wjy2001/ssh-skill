@@ -24,12 +24,13 @@ audience: [所有开发者, 安全审计者]
 
 以下场景超出设计范围：
 
+- **主动 MITM 攻击**：当前实现使用 `ssh.InsecureIgnoreHostKey()`，**不验证远程主机密钥**。攻击者若能拦截网络流量，可冒充目标服务器。计划在后续版本中引入 known_hosts 持久化与首次信任模型。
 - **主动攻击**：攻击者通过 Bash 命令直接读取 vault key 文件（`~/.ssh-mcp/.vault-key`）
 - **内存转储**：运行中的进程内存被 dump
 - **内核级攻击**：rootkit、内核模块
 - **物理访问**：攻击者拥有机器的物理访问权
 
-> 如果你需要防御主动攻击，应在操作系统层面加固（SELinux、文件完整性监控），而非依赖应用层加密。
+> 如果你需要防御主动攻击或 MITM，应在操作系统层面加固（SELinux、文件完整性监控、主机密钥钉扎），而非依赖应用层加密。当前版本聚焦"被动凭证泄露"和"AI 幻觉连接未授权服务器"两类威胁。
 
 ## Vault 加密存储
 
@@ -67,7 +68,7 @@ AES-256-GCM
 
 - 算法：Argon2id（抗 side-channel + 抗 GPU）
 - Salt：随机 16 字节，与派生密钥一起存储
-- 参数：time=1, memory=64MB, threads=4（默认）
+- 参数：`time=3, memory=64MB, threads=4`（对应 `vault.go` 中 `argonTime=3, argonMemory=64*1024, argonThreads=4`）
 
 ## 目标校验
 
@@ -101,15 +102,16 @@ AI agent 发起: ssh-mcp exec --server X --command "rm -rf /"
 {
   "timestamp": "2026-07-06T15:30:00Z",
   "server_id": "my-server",
-  "server_name": "生产服务器",
-  "host": "10.0.0.1",
-  "user": "root",
+  "server_host": "10.0.0.1:22",
   "command": "uptime",
   "exit_code": 0,
-  "duration_ms": 1234,
-  "error": null
+  "stdout_len": 41,
+  "stderr_len": 0,
+  "duration_ms": 1234
 }
 ```
+
+字段对应 `go/internal/types/types.go` 中的 `AuditEntry` 结构体。`stdout_len`/`stderr_len` 记录长度而非完整内容，避免审计日志膨胀；如需完整输出，由调用方另行收集。
 
 **特性**：
 - 追加写入，不覆盖历史记录

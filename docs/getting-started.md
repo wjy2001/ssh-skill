@@ -2,7 +2,7 @@
 title: 快速入门
 description: ssh-mcp 的安装、配置和 5 分钟上手教程
 doc_type: tutorial
-last_updated: 2026-07-06
+last_updated: 2026-07-15
 audience: [新用户, 所有开发者]
 ---
 
@@ -12,27 +12,60 @@ audience: [新用户, 所有开发者]
 
 ## 前置条件
 
-- Go 1.25+（仅源码构建需要）
+- Go 1.25+（构建 ssh-mcp 二进制）
 - 目标服务器运行标准 OpenSSH
 - 对目标服务器有 SSH 访问权限（密码、密钥或 SSH agent）
 
 ## 安装
 
-### 从源码构建
+ssh-mcp **不提供预编译二进制下载**。所有使用者从源码构建——这让分发透明、可审计、可钉到任意 commit。
+
+### 从源码构建（推荐）
 
 ```bash
-git clone <repo-url>
-cd ssh-skill/go
-go build -o ~/bin/ssh-mcp ./cmd/ssh-mcp/
-export PATH="$HOME/bin:$PATH"
+git clone <your-fork-or-mirror-url> ssh-skill
+cd ssh-skill
+
+# Linux / macOS
+./scripts/build.sh
+
+# Windows (PowerShell)
+.\scripts\build.ps1
 ```
 
-编译产物为单一静态二进制，无运行时依赖。
+构建脚本把 `go/cmd/ssh-mcp/` 编译到 `.claude/skills/ssh-ops/bin/ssh-mcp`（Windows 下为 `ssh-mcp.exe`），无需任何额外依赖。
+
+### 手动构建
+
+如果不想用构建脚本：
+
+```bash
+cd go
+go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
+```
 
 ### 验证安装
 
 ```bash
-ssh-mcp --help
+ssh-mcp --version
+# 或直接调用构建产物：
+.claude/skills/ssh-ops/bin/ssh-mcp --version
+```
+
+输出版本号即构建成功。
+
+### 安装为 Claude Code 全局技能
+
+构建后，把技能目录拷贝到全局 Claude skills 文件夹，任意项目即可使用：
+
+```bash
+# Linux / macOS
+mkdir -p ~/.claude/skills/ssh-ops
+cp -r .claude/skills/ssh-ops/SKILL.md .claude/skills/ssh-ops/bin ~/.claude/skills/ssh-ops/
+
+# Windows (PowerShell)
+New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.claude\skills\ssh-ops
+Copy-Item .claude\skills\ssh-ops\SKILL.md, .claude\skills\ssh-ops\bin $env:USERPROFILE\.claude\skills\ssh-ops\ -Recurse -Force
 ```
 
 ## 首次配置
