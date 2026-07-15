@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"ssh-mcp/internal/ssh"
 )
@@ -31,11 +32,17 @@ func cmdUpload(args []string) error {
 		return err
 	}
 
-	result, err := ssh.Upload(context.Background(), cfg, *localPath, *remotePath)
+	// Show progress bar during transfer.
+	result, err := ssh.Upload(context.Background(), cfg, *localPath, *remotePath,
+		func(transferred, total int64, elapsed time.Duration) {
+			renderProgress("Uploading", transferred, total, elapsed)
+		})
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "\n")
 		return err
 	}
 
+	finishProgress("Uploading", result.SizeBytes, time.Duration(result.DurationMs)*time.Millisecond)
 	fmt.Printf("Uploaded %d bytes to %s:%s (%dms)\n", result.SizeBytes, result.ServerID, result.Path, result.DurationMs)
 	return nil
 }

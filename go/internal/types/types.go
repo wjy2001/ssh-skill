@@ -2,6 +2,8 @@
 // It is the bottom layer of the architecture (Types → Config → Repo → Service → Runtime → UI).
 package types
 
+import "time"
+
 // AuthMethod represents the SSH authentication method.
 type AuthMethod string
 
@@ -64,6 +66,12 @@ type FileTransferResult struct {
 	SizeBytes  int64  `json:"size_bytes"`
 	DurationMs int64  `json:"duration_ms"`
 }
+
+// ProgressCallback is called during file transfers to report progress.
+// bytesTransferred: bytes copied so far
+// totalBytes: total file size (may be 0 if unknown)
+// elapsed: time since transfer started
+type ProgressCallback func(bytesTransferred, totalBytes int64, elapsed time.Duration)
 
 // AuditEntry represents a single command execution audit record.
 // Stored as JSONL in ~/.ssh-mcp/audit.log.

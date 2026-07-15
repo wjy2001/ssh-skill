@@ -43,7 +43,7 @@
 - **测试**：`cd go && go test ./... -v`
 - **类型检查**：`cd go && go vet ./...`
 - **Lint**：`cd go && go vet ./...`（Go 标准 vet 替代 lint）
-- **完整验证**：`cd go && go vet ./... && go test ./... -v && go build -o ../bin/ssh-mcp.exe ./cmd/ssh-mcp/`
+- **完整验证**：`cd go && go vet ./... && go test ./... -v && go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/`
 
 如果验证失败，修复后重新验证，通过后才能标记任务完成。如果以上项目未填写，询问项目负责人补全。
 

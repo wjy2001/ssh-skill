@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -25,6 +26,25 @@ var (
 	ErrConnectFailed     = errors.New("ssh: connection failed")
 )
 
+// Client wraps an ssh.Client and owns the lifecycle of any bastion (jump host)
+// connection underneath. Callers MUST call Close() when done so that both the
+// terminal SSH client and — when present — the bastion client are released.
+type Client struct {
+	*ssh.Client
+	bastion *ssh.Client // nil for direct connections
+}
+
+// Close closes the underlying ssh.Client and, if present, the bastion client.
+// It returns the first error encountered; bastion close errors are ignored
+// when the primary close already failed.
+func (c *Client) Close() error {
+	primaryErr := c.Client.Close()
+	if c.bastion != nil {
+		_ = c.bastion.Close()
+	}
+	return primaryErr
+}
+
 // FindServer looks up a server configuration by ID in the vault.
 // Returns ErrServerNotFound if the server is not found.
 func FindServer(vault *types.Vault, serverID string) (*types.ServerConfig, error) {
@@ -37,8 +57,13 @@ func FindServer(vault *types.Vault, serverID string) (*types.ServerConfig, error
 }
 
 // Connect establishes an SSH connection to the given server using the appropriate
-// authentication method (password, key, or agent).
-func Connect(ctx context.Context, cfg *types.ServerConfig) (*ssh.Client, error) {
+// authentication method (password, key, or agent). The returned Client owns the
+// connection lifecycle — including any bastion connection — and must be closed.
+//
+// Security note: HostKeyCallback is currently ssh.InsecureIgnoreHostKey(),
+// which means MITM attacks are NOT defended against. See docs/security.md
+// "Threat model" for the explicit out-of-scope list.
+func Connect(ctx context.Context, cfg *types.ServerConfig) (*Client, error) {
 	authMethods, err := buildAuthMethods(cfg)
 	if err != nil {
 		return nil, err
@@ -52,7 +77,7 @@ func Connect(ctx context.Context, cfg *types.ServerConfig) (*ssh.Client, error) 
 	clientConfig := &ssh.ClientConfig{
 		User:            cfg.User,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // v1: accept all host keys
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // v1: accept all host keys (MITM not defended)
 		Timeout:         DefaultTimeout,
 	}
 
@@ -61,7 +86,11 @@ func Connect(ctx context.Context, cfg *types.ServerConfig) (*ssh.Client, error) 
 		return connectViaBastion(ctx, addr, clientConfig, cfg.Bastion)
 	}
 
-	return connect(ctx, addr, clientConfig)
+	sshClient, err := connect(ctx, addr, clientConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{Client: sshClient}, nil
 }
 
 func connect(ctx context.Context, addr string, cfg *ssh.ClientConfig) (*ssh.Client, error) {
@@ -80,7 +109,7 @@ func connect(ctx context.Context, addr string, cfg *ssh.ClientConfig) (*ssh.Clie
 	return ssh.NewClient(c, chans, reqs), nil
 }
 
-func connectViaBastion(ctx context.Context, targetAddr string, targetCfg *ssh.ClientConfig, bastion *types.BastionConfig) (*ssh.Client, error) {
+func connectViaBastion(ctx context.Context, targetAddr string, targetCfg *ssh.ClientConfig, bastion *types.BastionConfig) (*Client, error) {
 	// Connect to bastion first.
 	bastionAuth, err := buildBastionAuth(bastion)
 	if err != nil {
@@ -95,7 +124,7 @@ func connectViaBastion(ctx context.Context, targetAddr string, targetCfg *ssh.Cl
 	bastionCfg := &ssh.ClientConfig{
 		User:            bastion.User,
 		Auth:            bastionAuth,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // v1: accept all host keys (MITM not defended)
 		Timeout:         DefaultTimeout,
 	}
 
@@ -118,20 +147,22 @@ func connectViaBastion(ctx context.Context, targetAddr string, targetCfg *ssh.Cl
 		return nil, fmt.Errorf("%w: handshake via bastion %s: %w", ErrConnectFailed, targetAddr, err)
 	}
 
-	// We need to keep bastion alive, so we wrap the client.
-	_ = bastionClient // kept alive for the lifetime of the returned client
-
-	return ssh.NewClient(c, chans, reqs), nil
+	// Wrap so the returned Client owns the bastion lifecycle via Close().
+	return &Client{
+		Client:  ssh.NewClient(c, chans, reqs),
+		bastion: bastionClient,
+	}, nil
 }
 
 // buildAuthMethods constructs the SSH authentication method list from the server config.
+// The cfg.Auth.EncryptedPassword field MUST contain the decrypted plaintext password
+// when Method == AuthPassword — decryption is the caller's responsibility (cli layer).
 func buildAuthMethods(cfg *types.ServerConfig) ([]ssh.AuthMethod, error) {
 	switch cfg.Auth.Method {
 	case types.AuthPassword:
 		if cfg.Auth.EncryptedPassword == "" {
 			return nil, fmt.Errorf("%w: password is empty", ErrAuthNotConfigured)
 		}
-		// The password should already be decrypted by the vault layer.
 		return []ssh.AuthMethod{ssh.Password(cfg.Auth.EncryptedPassword)}, nil
 
 	case types.AuthKey:
@@ -163,7 +194,11 @@ func buildBastionAuth(b *types.BastionConfig) ([]ssh.AuthMethod, error) {
 
 func buildKeyAuth(keyPath, encryptedPassphrase string) ([]ssh.AuthMethod, error) {
 	expandedPath := os.ExpandEnv(keyPath)
-	if expandedPath[:2] == "~/" || expandedPath[:2] == "~\\" {
+	if expandedPath == "" {
+		return nil, fmt.Errorf("%w: private key path is empty after expansion", ErrAuthNotConfigured)
+	}
+	// Expand ~/ and ~\ prefixes to the user's home directory.
+	if strings.HasPrefix(expandedPath, "~/") || strings.HasPrefix(expandedPath, "~\\") {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return nil, fmt.Errorf("resolve home dir: %w", err)

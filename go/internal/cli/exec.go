@@ -29,30 +29,30 @@ func cmdExec(args []string) error {
 		return err
 	}
 
-	// Target validation: server must exist in vault.
-	cfg, err := ssh.FindServer(app.Vault, *serverID)
+	// resolveServer looks up the server and decrypts the password in-place,
+	// returning a ServerConfig ready for SSH connection. We pass this cfg
+	// (not app.Vault) to ssh.Exec so the decrypted password is actually used.
+	cfg, err := resolveServer(app, *serverID)
 	if err != nil {
 		return fmt.Errorf("server '%s' not found in local configuration", *serverID)
-	}
-
-	// Decrypt password if needed.
-	if cfg.Auth.Method == types.AuthPassword && cfg.Auth.EncryptedPassword != "" {
-		decrypted, err := decryptField(app.VaultKey, cfg.Auth.EncryptedPassword)
-		if err != nil {
-			return fmt.Errorf("decrypt password: %w", err)
-		}
-		cfg.Auth.EncryptedPassword = decrypted // in-memory plaintext for SSH connection
 	}
 
 	ctx := context.Background()
 	timeout := time.Duration(*timeoutSec) * time.Second
 
-	result, err := ssh.Exec(ctx, app.Vault, *serverID, *command, timeout)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	result, execErr := ssh.Exec(ctx, cfg, *command, timeout)
+
+	// Defensive nil check: ssh.Exec only returns nil result on programmer error,
+	// but guard against regressions so an audit entry is still written.
+	if result == nil {
+		result = &types.ExecResult{
+			ServerID: *serverID,
+			Command:  *command,
+			ExitCode: -1,
+		}
 	}
 
-	// Write audit log entry.
+	// Write audit log entry (best-effort; does not block command output).
 	auditEntry := &types.AuditEntry{
 		Timestamp:  time.Now().UTC().Format(time.RFC3339),
 		ServerID:   result.ServerID,
@@ -67,6 +67,10 @@ func cmdExec(args []string) error {
 		fmt.Fprintf(os.Stderr, "warning: audit log write failed: %v\n", auditErr)
 	}
 
+	if execErr != nil {
+		fmt.Fprintln(os.Stderr, execErr)
+	}
+
 	// Print output.
 	if result.Stdout != "" {
 		fmt.Print(result.Stdout)
@@ -75,5 +79,5 @@ func cmdExec(args []string) error {
 		fmt.Fprint(os.Stderr, result.Stderr)
 	}
 
-	return err
+	return execErr
 }

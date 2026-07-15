@@ -1,16 +1,22 @@
-# Binary output
-bin/ssh-mcp
-bin/ssh-mcp.exe
+# Binary output (bundled with skill)
+.claude/skills/ssh-ops/bin/
 
 # Harness CE task workspaces (transient artifacts)
 .harness/tasks/
 
 # Go build artifacts
 go/bin/
+go/*.exe
 
 # IDE
 .idea/
 .vscode/
+
+# Local context
+.omo/
+
+# Local databases (stray test/dev artifacts from other tools)
+*.db
 
 # OS
 .DS_Store

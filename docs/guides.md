@@ -55,9 +55,12 @@ Claude Code 会自动调用 `ssh-mcp` CLI，并触发审批对话框。
 ### 本地开发环境
 
 ```bash
+# Use the build scripts (recommended):
+#   Linux/macOS: scripts/build.sh
+#   Windows:     scripts/build.ps1
+# Or build manually:
 cd go
-go build -o ../bin/ssh-mcp.exe ./cmd/ssh-mcp/    # Windows
-go build -o ../bin/ssh-mcp ./cmd/ssh-mcp/         # Linux/macOS
+go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
 ```
 
 ### 生产服务器
@@ -109,7 +112,7 @@ ssh-mcp vault init
 
 ```bash
 cd go
-go build -o ../bin/ssh-mcp ./cmd/ssh-mcp/
+go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
 ```
 
 ### 运行测试
@@ -127,7 +130,7 @@ go test ./internal/audit/... -v    # 仅审计测试
 ```bash
 cd go
 go vet ./...                       # 静态分析
-go build -o ../bin/ssh-mcp.exe ./cmd/ssh-mcp/  # Windows 编译验证
+go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/  # 编译验证
 ```
 
 ## 排错
