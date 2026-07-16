@@ -16,52 +16,43 @@ Secure SSH remote operations for AI agents (Claude Code / Codex).
 ## Install with Claude Code / Codex (recommended)
 
 **你不需要先手动 clone 本仓库，也不应下载全量源码。**
-安装只应拿到：`SKILL.md` + **当前平台**预编译二进制。
-不要拉取 `go/`、`.harness/`、docs 源码树，也不要 `git clone` 全仓库。
 
-打开本 README → 复制下面提示词 → 粘贴到 Claude Code / Codex → 让 agent 自动最小安装。
+安装说明**不写死在 README 里**，而是放在仓库文件：
 
-### 一键安装提示词（复制即用）
+- 权威安装指令：[`install/PROMPT.md`](./install/PROMPT.md)
+- 稳定 raw 地址（agent 每次装都会拉最新版）：
+  `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md`
+
+这样以后只更新 `install/PROMPT.md` / 安装脚本即可；用户复制的短提示词不用改。
+
+### 一键安装提示词（复制即用 · 短提示词）
 
 ```text
-请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
+请帮我安装 ssh-skill。
 
-仓库：https://github.com/wjy2001/ssh-skill
-安装脚本（优先）：
-- Linux / macOS:
-  curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
-- Windows (PowerShell):
-  irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
-
-硬性要求（最小下载）：
-1. 禁止 git clone / 禁止下载 zipball / 禁止拉取全量仓库
-2. 只允许下载安装所需文件：
-   - SKILL.md
-   - 当前平台二进制（Linux/macOS: bin/ssh-skill，Windows: bin/ssh-skill.exe）
-3. 安装到全局 Claude skills 目录：
-   - Linux / macOS: ~/.claude/skills/ssh-skill/
-   - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
-4. 覆盖旧版 skill；删除另一平台残留二进制
-5. 运行 --version 验证
-6. 不要修改用户已有的 ~/.ssh-skill/ vault 数据
-7. 不要默认要求安装 Go，不要从源码构建（除非最小下载失败且用户明确同意）
-
-若脚本不可用，再回退到 raw.githubusercontent.com 逐文件下载（仍禁止 clone）：
-- https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/SKILL.md
-- https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/<platform-binary>
-
-完成后用简洁中文汇报：安装路径、版本号、下一步 vault init / 添加服务器。
-告诉我：现在可以直接说「列出已配置服务器」或「在 my-server 上执行 uptime」。
+只做这一件事：
+1. 读取并严格按下面文件的最新内容执行（禁止凭记忆安装）：
+   https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md
+2. 除该文件明确允许的下载外，禁止 git clone / zipball / 全量仓库
+3. 安装完成后按该文件要求汇报
 ```
+
+### 为什么拆成「短提示词 + PROMPT.md」
+
+| 内容 | 是否常变 | 用户是否要改复制文本 |
+|------|----------|----------------------|
+| README 短提示词 | 几乎不变 | 否（复制一次即可） |
+| `install/PROMPT.md` | 可随时更新 | 否（agent 每次读最新） |
+| `scripts/install-skill.*` | 可随时更新 | 否 |
 
 ### 为什么这样更省流量
 
-| 方式 | 大约下载 | 是否暴露全仓库 |
-|------|----------|----------------|
-| `git clone` 全量 | 全仓库（源码 + 双平台二进制 + 文档 + harness） | 是 |
-| 最小安装脚本 | `SKILL.md` + **1 个**平台二进制（约 6MB） | 否（只取 skill 文件） |
+| 方式 | 大约下载 | 是否暴露全仓库到本机 |
+|------|----------|----------------------|
+| `git clone` 全量 | 全仓库 | 是 |
+| 短提示词 → `PROMPT.md` → 安装脚本 | 几 KB 指令 + **1 个**平台二进制（约 6MB） | 否（只取 skill 文件） |
 
-仓库对公众仍可读；这里约束的是 **agent 安装路径只取 skill 与二进制**，不把源码树装进用户机器。
+仓库对公众仍可读；约束的是 **agent 安装路径只取 skill 与二进制**，不把源码树装进用户机器。
 
 ### 安装后首次配置提示词（可选）
 
@@ -163,7 +154,11 @@ ssh-skill list
 
 ## Claude Code / Codex Integration
 
-推荐分发方式：**用户复制 README 安装提示词 / 运行最小安装脚本 → 只下载 skill + 当前平台二进制 → 装到全局 skills 目录**。
+推荐分发方式：
+
+1. 用户复制 README **短提示词**（稳定、少改）
+2. Agent 读取最新 [`install/PROMPT.md`](./install/PROMPT.md)
+3. 只下载 skill + 当前平台二进制 → 装到全局 skills 目录
 
 安装完成后，直接用自然语言即可，例如：
 

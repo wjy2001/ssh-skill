@@ -12,18 +12,24 @@ audience: [日常使用者, DevOps, 维护者]
 
 ## Claude Code / Codex 集成
 
-### 推荐：最小安装（无需 clone，不拉全量）
+### 推荐：短提示词 + 权威 PROMPT.md（无需 clone，不拉全量）
 
-分发主路径是 GitHub README 上的**一键安装提示词 / 安装脚本**：
+分发主路径：
 
 1. 打开 <https://github.com/wjy2001/ssh-skill>
-2. 复制 README 中的「一键安装提示词」，或直接运行：
+2. 复制 README 中的**短提示词**（几乎不变）
+3. Agent 去读取最新权威指令：
+   [`install/PROMPT.md`](../install/PROMPT.md)
+   raw：`https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md`
+4. 或由用户/agent 直接跑最小安装脚本：
    - Linux / macOS: `curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash`
    - Windows: `irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex`
-3. 安装结果只应包含 `SKILL.md` + **当前平台**二进制，放到全局 skills 目录
 
-**禁止** agent 为安装目的执行 `git clone` / 下载 zipball / 拉取 `go/` `.harness/` 等全量树。  
-完整提示词见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
+安装结果只应包含 `SKILL.md` + **当前平台**二进制。
+**禁止** agent 为安装目的执行 `git clone` / 下载 zipball / 拉取 `go/` `.harness/` 等全量树。
+
+用户复制的短提示词不用随安装细节变更而更新；改 `install/PROMPT.md` / `scripts/install-skill.*` 即可实时生效。
+详见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
 
 全局落点：
 
