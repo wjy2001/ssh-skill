@@ -10,7 +10,7 @@ audience: [新用户, 所有开发者]
 
 5 分钟内完成安装、初始化并执行第一条远程命令。
 
-**推荐路径**：不先手动 clone，也**不要**下载全量仓库。打开 [GitHub README](https://github.com/wjy2001/ssh-skill)，复制「一键安装提示词」，粘贴给 Claude Code / Codex，让 agent **只下载** `SKILL.md` + 当前平台二进制。
+**推荐路径**：不先手动 clone，也**不要**下载全量仓库。打开 [GitHub README](https://github.com/wjy2001/ssh-skill)，复制**短提示词**，让 agent 去读最新的 [`install/PROMPT.md`](../install/PROMPT.md) 并只安装 skill + 当前平台二进制。
 
 ## 前置条件
 
@@ -18,12 +18,29 @@ audience: [新用户, 所有开发者]
 - 对目标服务器有 SSH 访问权限（密码、密钥或 SSH agent）
 - 使用预编译二进制时**不需要**安装 Go；仅从源码构建时需要 Go 1.18+
 
-## 安装（推荐：最小下载 / 提示词安装）
+## 安装（推荐：短提示词 + 权威 PROMPT.md）
 
-你**不需要**先拉取本仓库，也**不应**让 agent `git clone` 全量项目。  
+你**不需要**先拉取本仓库，也**不应**让 agent `git clone` 全量项目。
+权威安装步骤在仓库文件（可随时更新，用户复制的短提示词不用改）：
+
+- 权威指令：[`install/PROMPT.md`](../install/PROMPT.md)
+- 稳定 raw：`https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md`
+
 安装面只允许：`SKILL.md` + 当前平台二进制（约 6MB），不要 `go/`、`.harness/`、docs 源码树。
 
-### 直接运行安装脚本（最小下载）
+### 给 agent 的短提示词（复制即用）
+
+```text
+请帮我安装 ssh-skill。
+
+只做这一件事：
+1. 读取并严格按下面文件的最新内容执行（禁止凭记忆安装）：
+   https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md
+2. 除该文件明确允许的下载外，禁止 git clone / zipball / 全量仓库
+3. 安装完成后按该文件要求汇报
+```
+
+### 直接运行安装脚本（最小下载，也可不用 agent）
 
 ```bash
 # Linux / macOS
@@ -33,30 +50,6 @@ curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/in
 ```powershell
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
-```
-
-### 给 agent 的提示词（复制即用）
-
-```text
-请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
-
-仓库：https://github.com/wjy2001/ssh-skill
-安装脚本（优先）：
-- Linux / macOS:
-  curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
-- Windows (PowerShell):
-  irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
-
-硬性要求（最小下载）：
-1. 禁止 git clone / 禁止下载 zipball / 禁止拉取全量仓库
-2. 只允许下载：SKILL.md + 当前平台二进制
-3. 安装到：
-   - Linux / macOS: ~/.claude/skills/ssh-skill/
-   - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
-4. 覆盖旧版 skill；删除另一平台残留二进制
-5. 运行 --version 验证
-6. 不要修改用户已有的 ~/.ssh-skill/ vault 数据
-7. 不要默认要求安装 Go，不要从源码构建（除非最小下载失败且用户明确同意）
 ```
 
 安装落点：

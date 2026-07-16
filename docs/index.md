@@ -37,7 +37,7 @@ docs/
 ### 新用户（5 分钟上手）
 
 1. 先读本页，建立文档地图认知
-2. 仓库根目录 [`README.md`](../README.md) — 复制「一键安装提示词」或跑最小安装脚本（只取 skill + 当前平台二进制，无需 clone 全量）
+2. 仓库根目录 [`README.md`](../README.md) — 复制短提示词；agent 读取 [`install/PROMPT.md`](../install/PROMPT.md) 做最小安装（只取 skill + 当前平台二进制）
 3. [`getting-started.md`](./getting-started.md) — 安装路径说明、初始化 vault，执行第一条命令
 4. [`cli-reference.md`](./cli-reference.md) — 了解所有可用命令
 5. [`security.md`](./security.md) — 理解你的凭证如何被保护
