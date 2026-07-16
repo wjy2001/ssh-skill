@@ -15,8 +15,11 @@ Secure SSH remote operations for AI agents (Claude Code / Codex).
 
 ## Install with Claude Code / Codex (recommended)
 
-**你不需要先手动 clone 本仓库。**
-打开本 README → 复制下面提示词 → 粘贴到 Claude Code / Codex → 让 agent 自动安装。
+**你不需要先手动 clone 本仓库，也不应下载全量源码。**
+安装只应拿到：`SKILL.md` + **当前平台**预编译二进制。
+不要拉取 `go/`、`.harness/`、docs 源码树，也不要 `git clone` 全仓库。
+
+打开本 README → 复制下面提示词 → 粘贴到 Claude Code / Codex → 让 agent 自动最小安装。
 
 ### 一键安装提示词（复制即用）
 
@@ -24,30 +27,41 @@ Secure SSH remote operations for AI agents (Claude Code / Codex).
 请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
 
 仓库：https://github.com/wjy2001/ssh-skill
+安装脚本（优先）：
+- Linux / macOS:
+  curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
+- Windows (PowerShell):
+  irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
 
-安装目标：
-1. 由你（agent）克隆仓库到本机临时目录；用户无需事先 git clone
-2. 把技能安装到全局 Claude skills 目录，使任意项目可用：
+硬性要求（最小下载）：
+1. 禁止 git clone / 禁止下载 zipball / 禁止拉取全量仓库
+2. 只允许下载安装所需文件：
+   - SKILL.md
+   - 当前平台二进制（Linux/macOS: bin/ssh-skill，Windows: bin/ssh-skill.exe）
+3. 安装到全局 Claude skills 目录：
    - Linux / macOS: ~/.claude/skills/ssh-skill/
    - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
-3. 安装内容必须同时包含：
-   - SKILL.md
-   - bin/ 目录及其预编译二进制（Linux/macOS: ssh-skill，Windows: ssh-skill.exe）
-4. 安装后验证二进制可运行（--version）
-5. 若全局目录已存在旧版 ssh-skill，先覆盖更新，不要残留旧二进制
-6. 安装完成后用简洁中文汇报：
-   - 安装路径
-   - 版本号输出
-   - 下一步如何初始化 vault / 添加服务器
+4. 覆盖旧版 skill；删除另一平台残留二进制
+5. 运行 --version 验证
+6. 不要修改用户已有的 ~/.ssh-skill/ vault 数据
+7. 不要默认要求安装 Go，不要从源码构建（除非最小下载失败且用户明确同意）
 
-安装约束：
-- 优先使用仓库自带预编译二进制，不要默认要求用户装 Go
-- 仅在预编译二进制缺失或无法运行时，才尝试从源码构建（需要 Go 1.18+）
-- 不要把任何真实密码写进命令历史示例；演示用占位符即可
-- 不要修改用户已有的 ~/.ssh-skill/ vault 数据，除非用户明确要求初始化
+若脚本不可用，再回退到 raw.githubusercontent.com 逐文件下载（仍禁止 clone）：
+- https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/SKILL.md
+- https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/<platform-binary>
 
-完成后告诉我：现在可以直接说「列出已配置服务器」或「在 my-server 上执行 uptime」。
+完成后用简洁中文汇报：安装路径、版本号、下一步 vault init / 添加服务器。
+告诉我：现在可以直接说「列出已配置服务器」或「在 my-server 上执行 uptime」。
 ```
+
+### 为什么这样更省流量
+
+| 方式 | 大约下载 | 是否暴露全仓库 |
+|------|----------|----------------|
+| `git clone` 全量 | 全仓库（源码 + 双平台二进制 + 文档 + harness） | 是 |
+| 最小安装脚本 | `SKILL.md` + **1 个**平台二进制（约 6MB） | 否（只取 skill 文件） |
+
+仓库对公众仍可读；这里约束的是 **agent 安装路径只取 skill 与二进制**，不把源码树装进用户机器。
 
 ### 安装后首次配置提示词（可选）
 
@@ -149,7 +163,7 @@ ssh-skill list
 
 ## Claude Code / Codex Integration
 
-推荐分发方式：**用户复制 README 中的安装提示词 → agent 自动 clone + 安装全局 skill**。
+推荐分发方式：**用户复制 README 安装提示词 / 运行最小安装脚本 → 只下载 skill + 当前平台二进制 → 装到全局 skills 目录**。
 
 安装完成后，直接用自然语言即可，例如：
 
@@ -159,7 +173,7 @@ ssh-skill list
 列出所有已配置的服务器
 ```
 
-技能本体位于仓库 `.claude/skills/ssh-skill/`（含 `SKILL.md` + 预编译 `bin/`）。全局安装后，Claude Code / 兼容 skill 机制的 agent 在处理 SSH 任务时应优先走该技能。
+技能本体位于仓库 `.claude/skills/ssh-skill/`（`SKILL.md` + 预编译 `bin/`）。全局安装后，Claude Code / 兼容 skill 机制的 agent 在处理 SSH 任务时应优先走该技能。
 
 ## Security Model
 

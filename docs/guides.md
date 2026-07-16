@@ -12,15 +12,18 @@ audience: [日常使用者, DevOps, 维护者]
 
 ## Claude Code / Codex 集成
 
-### 推荐：提示词安装（无需先 clone）
+### 推荐：最小安装（无需 clone，不拉全量）
 
-分发主路径是 GitHub README 上的**一键安装提示词**：
+分发主路径是 GitHub README 上的**一键安装提示词 / 安装脚本**：
 
 1. 打开 <https://github.com/wjy2001/ssh-skill>
-2. 复制 README 中的「一键安装提示词」
-3. 粘贴到 Claude Code 或 Codex，让 agent **自动** clone 并安装到全局 skills 目录
+2. 复制 README 中的「一键安装提示词」，或直接运行：
+   - Linux / macOS: `curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash`
+   - Windows: `irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex`
+3. 安装结果只应包含 `SKILL.md` + **当前平台**二进制，放到全局 skills 目录
 
-用户**不需要**事先拉取本仓库。agent 应同时安装 `SKILL.md` 与 `bin/`（预编译二进制），并执行 `--version` 验证。完整提示词见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
+**禁止** agent 为安装目的执行 `git clone` / 下载 zipball / 拉取 `go/` `.harness/` 等全量树。  
+完整提示词见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
 
 全局落点：
 

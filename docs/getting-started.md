@@ -10,7 +10,7 @@ audience: [新用户, 所有开发者]
 
 5 分钟内完成安装、初始化并执行第一条远程命令。
 
-**推荐路径**：不先手动 clone。打开 [GitHub README](https://github.com/wjy2001/ssh-skill)，复制「一键安装提示词」，粘贴给 Claude Code / Codex，让 agent 自动安装全局 skill。
+**推荐路径**：不先手动 clone，也**不要**下载全量仓库。打开 [GitHub README](https://github.com/wjy2001/ssh-skill)，复制「一键安装提示词」，粘贴给 Claude Code / Codex，让 agent **只下载** `SKILL.md` + 当前平台二进制。
 
 ## 前置条件
 
@@ -18,32 +18,45 @@ audience: [新用户, 所有开发者]
 - 对目标服务器有 SSH 访问权限（密码、密钥或 SSH agent）
 - 使用预编译二进制时**不需要**安装 Go；仅从源码构建时需要 Go 1.18+
 
-## 安装（推荐：提示词让 agent 安装）
+## 安装（推荐：最小下载 / 提示词安装）
 
-你**不需要**先拉取本仓库。把下面提示词完整复制到 Claude Code 或 Codex：
+你**不需要**先拉取本仓库，也**不应**让 agent `git clone` 全量项目。  
+安装面只允许：`SKILL.md` + 当前平台二进制（约 6MB），不要 `go/`、`.harness/`、docs 源码树。
+
+### 直接运行安装脚本（最小下载）
+
+```bash
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
+```
+
+### 给 agent 的提示词（复制即用）
 
 ```text
 请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
 
 仓库：https://github.com/wjy2001/ssh-skill
+安装脚本（优先）：
+- Linux / macOS:
+  curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
+- Windows (PowerShell):
+  irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex
 
-安装目标：
-1. 由你（agent）克隆仓库到本机临时目录；用户无需事先 clone
-2. 把技能安装到全局 Claude skills 目录，使任意项目可用：
+硬性要求（最小下载）：
+1. 禁止 git clone / 禁止下载 zipball / 禁止拉取全量仓库
+2. 只允许下载：SKILL.md + 当前平台二进制
+3. 安装到：
    - Linux / macOS: ~/.claude/skills/ssh-skill/
    - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
-3. 安装内容必须同时包含：
-   - SKILL.md
-   - bin/ 目录及其预编译二进制（Linux/macOS: ssh-skill，Windows: ssh-skill.exe）
-4. 安装后验证二进制可运行（--version）
-5. 若全局目录已存在旧版 ssh-skill，先覆盖更新，不要残留旧二进制
-6. 安装完成后用简洁中文汇报：安装路径、版本号、下一步如何 vault init / 添加服务器
-
-安装约束：
-- 优先使用仓库自带预编译二进制，不要默认要求用户装 Go
-- 仅在预编译二进制缺失或无法运行时，才尝试从源码构建（需要 Go 1.18+）
-- 不要把任何真实密码写进命令历史示例
-- 不要修改用户已有的 ~/.ssh-skill/ vault 数据，除非用户明确要求初始化
+4. 覆盖旧版 skill；删除另一平台残留二进制
+5. 运行 --version 验证
+6. 不要修改用户已有的 ~/.ssh-skill/ vault 数据
+7. 不要默认要求安装 Go，不要从源码构建（除非最小下载失败且用户明确同意）
 ```
 
 安装落点：
