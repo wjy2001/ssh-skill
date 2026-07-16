@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 const (

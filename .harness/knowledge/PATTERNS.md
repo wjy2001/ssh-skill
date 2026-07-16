@@ -42,13 +42,13 @@
 - **来源**：把完成判断从"文档账本闭合"升级为"行为契约和 TDD 证据闭合"。
 - **版本**：1.0.0
 
-### 模式名：[简短描述]
+### resolveServer：连接前解密密码
 
-- **何时使用**：适用场景
-- **结构**：代码骨架或设计图
-- **示例**：项目中的实际用例（可引用文件路径）
-- **来源**：从哪个问题/需求沉淀而来
-- **版本**：语义化版本（该模式发生重大变化时递增）
+- **何时使用**：CLI 在 exec/test/upload/download 等需要建立 SSH 会话的路径上解析服务器配置时。
+- **结构**：`config 解析路径 → 加载 vault → resolveServer(id) → 若 password 则用 vault key 解密字段 → 将 in-memory ServerConfig 交给 ssh.Connect/Exec`
+- **示例**：`go/internal/cli/helpers.go` 的 `resolveServer`；路径由 `config.Dir()` 在 Runtime 注入，Service 不读 config 包
+- **来源**：凭证密文只在 vault 落盘；明文仅在连接前短暂存在于 CLI 编排层。
+- **版本**：1.0.0
 
 ---
 
@@ -93,11 +93,3 @@
 - **为什么危险**：任务看起来完成，但用户可观察行为没有被测试锁住，换模型或恢复上下文后容易把假完成当事实。
 - **正确替代**：使用"行为契约驱动完成门禁"模式。
 - **检测方法**：运行 `.harness/tools/validate-harness-context.py`；review 检查 `direct-no-behavior` 是否只对应 `no-behavior`。
-
-### 反模式名：[简短描述]
-
-- **表现**：出现什么问题
-- **错误示例**：不该怎么写的代码
-- **为什么危险**：导致的根本后果
-- **正确替代**：指向对应的已验证模式
-- **检测方法**：是否存在 CI/测试可以阻止此反模式

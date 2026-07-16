@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	// DefaultConfigDir is the default directory for ssh-mcp configuration.
-	DefaultConfigDir = ".ssh-mcp"
+	// DefaultConfigDir is the default directory for ssh-skill configuration.
+	DefaultConfigDir = ".ssh-skill"
 
 	// EnvConfigDir overrides the default configuration directory.
-	EnvConfigDir = "SSH_MCP_CONFIG_DIR"
+	EnvConfigDir = "SSH_SKILL_CONFIG_DIR"
 )
 
 // Dir returns the configuration directory path.
-// Priority: SSH_MCP_CONFIG_DIR env var > ~/.ssh-mcp/
+// Priority: SSH_SKILL_CONFIG_DIR env var > ~/.ssh-skill/
 func Dir() (string, error) {
 	if envDir := os.Getenv(EnvConfigDir); envDir != "" {
 		return envDir, nil

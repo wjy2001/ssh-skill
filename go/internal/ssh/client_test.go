@@ -3,7 +3,7 @@ package ssh
 import (
 	"testing"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 func TestFindServer(t *testing.T) {

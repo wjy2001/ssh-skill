@@ -1,4 +1,4 @@
-// Package cli implements the ssh-mcp command-line interface.
+// Package cli implements the ssh-skill command-line interface.
 // Each subcommand is defined in its own file and registered in root.go.
 package cli
 
@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"ssh-mcp/internal/audit"
-	"ssh-mcp/internal/config"
-	"ssh-mcp/internal/types"
-	"ssh-mcp/internal/vault"
+	"ssh-skill/internal/audit"
+	"ssh-skill/internal/config"
+	"ssh-skill/internal/types"
+	"ssh-skill/internal/vault"
 )
 
 // version holds the build-injected version string. Set via SetVersion() from
@@ -111,10 +111,8 @@ func Run(args []string) error {
 		return cmdTest(cmdArgs)
 	case "vault":
 		return cmdVault(cmdArgs)
-	case "serve":
-		return cmdServe(cmdArgs)
 	case "--version", "-V":
-		fmt.Printf("ssh-mcp %s\n", version)
+		fmt.Printf("ssh-skill %s\n", version)
 		return nil
 	case "--help", "-h", "help":
 		printUsage()
@@ -127,19 +125,18 @@ func Run(args []string) error {
 }
 
 func printUsage() {
-	fmt.Println(`ssh-mcp — secure SSH remote operations
+	fmt.Println(`ssh-skill — secure SSH remote operations
 
 Usage:
-  ssh-mcp list                    List all configured servers
-  ssh-mcp add                     Add a new server configuration
-  ssh-mcp remove --id <id>        Remove a server configuration
-  ssh-mcp exec --server <id> --command <cmd>  Execute a command
-  ssh-mcp upload --server <id> --local <path> --remote <path>  Upload a file
-  ssh-mcp download --server <id> --remote <path> --local <path>  Download a file
-  ssh-mcp test --server <id>      Test SSH connection
-  ssh-mcp vault init              Initialize vault key and config
-  ssh-mcp serve                   Start MCP server mode (not yet implemented)
-  ssh-mcp --version, -V           Print version
+  ssh-skill list                    List all configured servers
+  ssh-skill add                     Add a new server configuration
+  ssh-skill remove --id <id>        Remove a server configuration
+  ssh-skill exec --server <id> --command <cmd>  Execute a command
+  ssh-skill upload --server <id> --local <path> --remote <path>  Upload a file
+  ssh-skill download --server <id> --remote <path> --local <path>  Download a file
+  ssh-skill test --server <id>      Test SSH connection
+  ssh-skill vault init              Initialize vault key and config
+  ssh-skill --version, -V           Print version
 
-Use 'ssh-mcp <command> --help' for detailed options.`)
+Use 'ssh-skill <command> --help' for detailed options.`)
 }

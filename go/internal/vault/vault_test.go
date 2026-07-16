@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 var isWindows = runtime.GOOS == "windows"

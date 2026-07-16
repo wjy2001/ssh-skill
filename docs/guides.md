@@ -1,8 +1,8 @@
 ---
 title: 操作指南
-description: ssh-mcp 的 Claude Code 集成、部署、CI/CD 和排错指南
+description: ssh-skill 的 Claude Code 集成、部署、CI/CD 和排错指南
 doc_type: how-to
-last_updated: 2026-07-06
+last_updated: 2026-07-16
 audience: [日常使用者, DevOps, 维护者]
 ---
 
@@ -14,15 +14,23 @@ audience: [日常使用者, DevOps, 维护者]
 
 ### 安装技能
 
-将 `ssh-ops` 技能安装到你的项目中：
+将 `ssh-skill` 技能安装到你的项目或全局 skills 目录时，**同时复制** `SKILL.md` 与 `bin/`（二进制需已构建）：
 
 ```bash
-# 复制技能定义到项目
-mkdir -p .claude/skills/ssh-ops/
-cp .claude/skills/ssh-ops/SKILL.md .claude/skills/ssh-ops/
+# 项目内（相对仓库根）
+mkdir -p .claude/skills/ssh-skill/
+# 仓库已自带预编译 bin/（Linux + Windows），无需构建；如需重构建再跑：
+#   ./scripts/build.sh   # 或 scripts/build.ps1
+# 全局安装示例（Linux / macOS）：
+mkdir -p ~/.claude/skills/ssh-skill
+cp -r .claude/skills/ssh-skill/SKILL.md .claude/skills/ssh-skill/bin ~/.claude/skills/ssh-skill/
+
+# Windows (PowerShell)
+New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.claude\skills\ssh-skill
+Copy-Item .claude\skills\ssh-skill\SKILL.md, .claude\skills\ssh-skill\bin $env:USERPROFILE\.claude\skills\ssh-skill\ -Recurse -Force
 ```
 
-Claude Code 会在你请求 SSH 操作时自动加载该技能。
+只复制 `SKILL.md` 而不带 `bin/` 时，技能无法调用 `ssh-skill`。Claude Code 会在你请求 SSH 操作时加载该技能。
 
 ### 使用方式
 
@@ -34,21 +42,21 @@ Claude Code 会在你请求 SSH 操作时自动加载该技能。
 > 列出所有已配置的服务器
 ```
 
-Claude Code 会自动调用 `ssh-mcp` CLI，并触发审批对话框。
+Claude Code 会通过技能 / 受控 Bash 调用 `ssh-skill` CLI；此时由 **Claude Code 的权限策略** 弹出审批对话框。
 
 ### 安全规则
 
-技能内置的安全规则：
+技能与 CLI 相关的安全约束：
 
-1. **审批要求**：每个 `ssh-mcp exec` 命令需要用户确认
-2. **服务器预配置**：不能连接未通过 `ssh-mcp add` 添加的服务器
-3. **凭证不离开本机**：密码 AES-256-GCM 加密存储
-4. **审计追踪**：所有命令记录到 `~/.ssh-mcp/audit.log`
+1. **审批要求**：审批仅在通过 Claude Code skill / 受控 Bash 调用时由平台策略触发；**裸 `ssh-skill` 二进制本身没有内置审批门**。
+2. **服务器预配置**：不能连接未通过 `ssh-skill add` 添加的服务器。
+3. **凭证不离开本机**：密码等敏感字段经 AES-256-GCM 加密后落盘（详见 [`security.md`](./security.md)）。
+4. **审计追踪**：**当前仅 `exec` 写入** `~/.ssh-skill/audit.log`；`upload` / `download` / `test` / `add` / `remove` / `list` 等命令目前不写审计。
 
 ### 诊断规则
 
-1. **`ssh-mcp test` 优先**：诊断连接问题时，始终先用 `ssh-mcp test --server <id>`。它使用与 `exec` 完全相同的认证、加密和 SSH 协议栈。
-2. **辅助工具仅在 `ssh-mcp` 失败后使用**：`ssh-mcp test` 失败后，才用 `ping`、`nslookup` 等工具缩小原因范围（网络 vs 认证 vs 服务端）。但绝不用它们推翻一次成功的 `ssh-mcp test`。
+1. **`ssh-skill test` 优先**：诊断连接问题时，始终先用 `ssh-skill test --server <id>`。它使用与 `exec` 完全相同的认证、加密和 SSH 协议栈。
+2. **辅助工具仅在 `ssh-skill` 失败后使用**：`ssh-skill test` 失败后，才用 `ping`、`nslookup` 等工具缩小原因范围（网络 vs 认证 vs 服务端）。但绝不用它们推翻一次成功的 `ssh-skill test`。
 
 ## 部署
 
@@ -60,48 +68,48 @@ Claude Code 会自动调用 `ssh-mcp` CLI，并触发审批对话框。
 #   Windows:     scripts/build.ps1
 # Or build manually:
 cd go
-go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
+go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
 ```
 
 ### 生产服务器
 
-`ssh-mcp` 是单一静态二进制，部署只需复制文件：
+`ssh-skill` 是单一静态二进制，部署只需复制文件：
 
 ```bash
 # 在构建机上
-GOOS=linux GOARCH=amd64 go build -o ssh-mcp ./cmd/ssh-mcp/
+GOOS=linux GOARCH=amd64 go build -o ssh-skill ./cmd/ssh-skill/
 
 # 复制到目标服务器
-scp ssh-mcp user@server:/usr/local/bin/
-ssh user@server chmod +x /usr/local/bin/ssh-mcp
+scp ssh-skill user@server:/usr/local/bin/
+ssh user@server chmod +x /usr/local/bin/ssh-skill
 ```
 
 ### 与 CI/CD 集成
 
-在 CI 环境中使用 `ssh-mcp` 时，注意凭证管理：
+在 CI 环境中使用 `ssh-skill` 时，注意凭证管理：
 
 ```yaml
 # GitHub Actions 示例
 - name: Deploy via SSH
   run: |
-    ssh-mcp vault init
-    ssh-mcp add --id prod --name "Production" \
+    ssh-skill vault init
+    ssh-skill add --id prod --name "Production" \
       --host ${{ secrets.SSH_HOST }} \
       --user ${{ secrets.SSH_USER }} \
       --auth-type key \
       --key-path <(echo "${{ secrets.SSH_KEY }}")
-    ssh-mcp exec --server prod --command "docker-compose up -d"
+    ssh-skill exec --server prod --command "docker-compose up -d"
 ```
 
-> 密钥应通过 CI secrets 注入，而非硬编码或存储在仓库中。
+> 密钥应通过 CI secrets 注入，而非硬编码或存储在仓库中。CI 中通常直接跑裸二进制，**不会**出现 Claude Code 审批对话框。
 
 ### 自定义配置目录
 
-默认配置目录是 `~/.ssh-mcp/`。可通过环境变量覆盖：
+默认配置目录是 `~/.ssh-skill/`。可通过环境变量覆盖：
 
 ```bash
-export SSH_MCP_CONFIG_DIR=/opt/ssh-mcp-config
-ssh-mcp vault init
+export SSH_SKILL_CONFIG_DIR=/opt/ssh-skill-config
+ssh-skill vault init
 ```
 
 这在容器环境或多用户共享主机上特别有用。
@@ -112,7 +120,7 @@ ssh-mcp vault init
 
 ```bash
 cd go
-go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/
+go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
 ```
 
 ### 运行测试
@@ -130,27 +138,33 @@ go test ./internal/audit/... -v    # 仅审计测试
 ```bash
 cd go
 go vet ./...                       # 静态分析
-go build -o ../.claude/skills/ssh-ops/bin/ssh-mcp ./cmd/ssh-mcp/  # 编译验证
+go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/  # 编译验证
 ```
 
 ## 排错
 
-### vault init 失败
+### vault init 行为（幂等）
 
-**症状**：`ssh-mcp vault init` 报错 "vault already exists"
+`ssh-skill vault init` **是幂等的**，不会因目录或 vault 已存在而报错 “vault already exists”。
 
-**原因**：`~/.ssh-mcp/` 已存在
+实际行为（与代码一致）：
 
-**解决**：
+1. `Load()` → `EnsureKey`：若 `~/.ssh-skill/.vault-key` 已存在则**复用**该密钥；不存在则生成新密钥。
+2. `Load` vault：文件不存在则得到空服务器列表；已存在则解密加载现有配置。
+3. `Save()`：把当前 vault（含已有服务器，或空列表）写回加密配置文件。
+
+因此重复执行 `vault init` 是安全的：不会清空已有服务器配置，也不会强制换密钥。
+
+**如需完全重置**（会丢失已有凭证与配置）：
+
 ```bash
-# 如需重置（会丢失已有凭证！）
-rm -rf ~/.ssh-mcp/
-ssh-mcp vault init
+rm -rf ~/.ssh-skill/
+ssh-skill vault init
 ```
 
 ### 连接超时
 
-**症状**：`ssh-mcp test --server X` 超时
+**症状**：`ssh-skill test --server X` 超时
 
 **排查步骤**：
 ```bash
@@ -160,7 +174,7 @@ ping <host>
 # 2. 确认 SSH 端口开放
 nc -zv <host> 22
 
-# 3. 直接用 ssh 测试（排除 ssh-mcp 问题）
+# 3. 直接用 ssh 测试（排除 ssh-skill 问题）
 ssh -p 22 <user>@<host> echo OK
 ```
 
@@ -171,22 +185,22 @@ ssh -p 22 <user>@<host> echo OK
 **排查**：
 ```bash
 # 检查配置中存储的认证信息
-ssh-mcp list
+ssh-skill list
 
 # 重新添加服务器（密码/密钥路径可能有误）
-ssh-mcp remove --id <server>
-ssh-mcp add --id <server> ... --auth-type key --key-path ~/.ssh/id_rsa
+ssh-skill remove --id <server>
+ssh-skill add --id <server> ... --auth-type key --key-path ~/.ssh/id_rsa
 ```
 
 ### 找不到服务器
 
-**症状**：`ssh-mcp exec --server X` 报错 "server not found"
+**症状**：`ssh-skill exec --server X` 报错 "server not found"
 
 **原因**：服务器 ID 输入错误或未添加
 
 **解决**：
 ```bash
-ssh-mcp list    # 查看所有已配置服务器的 ID
+ssh-skill list    # 查看所有已配置服务器的 ID
 ```
 
 ## 相关文档

@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"ssh-mcp/internal/ssh"
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/ssh"
+	"ssh-skill/internal/types"
 )
 
 func cmdExec(args []string) error {

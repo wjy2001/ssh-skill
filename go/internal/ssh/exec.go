@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 // Exec runs a command on the remote server described by cfg and returns the
@@ -71,7 +71,7 @@ func Exec(ctx context.Context, cfg *types.ServerConfig, command string, timeout 
 	// Genuine error (connection lost, parse failure, etc.): keep ExitCode at -1
 	// and surface the error to the caller.
 	if runErr != nil {
-		result.Stderr += fmt.Sprintf("\n[ssh-mcp] %v", runErr)
+		result.Stderr += fmt.Sprintf("\n[ssh-skill] %v", runErr)
 		return result, runErr
 	}
 

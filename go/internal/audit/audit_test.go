@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 func TestLogWritesJSONL(t *testing.T) {

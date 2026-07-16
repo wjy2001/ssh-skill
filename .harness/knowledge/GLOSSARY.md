@@ -1,7 +1,7 @@
 # 术语表
 
 ## Vault（凭证保险库）
-- **定义**：以 AES-256-GCM 加密存储所有 ServerConfig 的容器，落盘为 `~/.ssh-mcp/servers.json.age`，由 32 字节随机 vault key 解密。
+- **定义**：以 AES-256-GCM 加密存储所有 ServerConfig 的容器，落盘为 `~/.ssh-skill/servers.json.age`，由 32 字节随机 vault key 解密。
 - **所属层**：Repo / Service
 - **相关文件**：`go/internal/vault/vault.go`、`go/internal/vault/storage.go`、`go/internal/types/types.go`
 - **备注**：密码字段在 vault 内是 hex 编码的密文，仅在 cli 层 `resolveServer()` 调用时解密为 in-memory 明文。
@@ -28,12 +28,13 @@
 - **相关文件**：`go/internal/ssh/client.go`
 
 ## Argon2id
-- **定义**：从 vault master key 派生 AES 密钥的 KDF 算法，参数 `time=3, memory=64MB, threads=4`，抗 side-channel 与 GPU 暴力破解。
-- **所属层**：Repo
-- **相关文件**：`go/internal/vault/vault.go`
+- **定义**：KDF：每次 Encrypt 用 **vault master key（32 字节随机密钥，存于 `.vault-key`）+ 随机 salt** 经 Argon2id 派生 AES-256 密钥，再做 AES-256-GCM。参数 `time=3, memory=64MB, threads=4`。
+- **所属层**：Repo / Service（vault）
+- **相关文件**：`go/internal/vault/vault.go`（`DeriveKey` / `Encrypt` / `Decrypt`）
+- **备注**：**不是**用户登录口令或交互式 passphrase 的 KDF；master key 为随机生成的 vault key。保留 Argon2id 步骤使 on-disk 格式可前向兼容未来 passphrase 模式。
 
 ## AuditEntry
-- **定义**：单条 `exec` 命令的审计记录，以 JSONL 追加写入 `~/.ssh-mcp/audit.log`。字段含 timestamp、server_id、server_host、command、exit_code、stdout_len、stderr_len、duration_ms。
+- **定义**：单条 `exec` 命令的审计记录，以 JSONL 追加写入 `~/.ssh-skill/audit.log`。字段含 timestamp、server_id、server_host、command、exit_code、stdout_len、stderr_len、duration_ms。
 - **所属层**：Types
 - **相关文件**：`go/internal/types/types.go`、`go/internal/audit/audit.go`、`go/internal/cli/exec.go`
 

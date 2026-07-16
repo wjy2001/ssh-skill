@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 // Save serializes the vault to JSON, encrypts it, and writes to disk.

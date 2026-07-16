@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 // shellCommand returns an *exec.Cmd that runs the given shell command string
@@ -159,15 +159,15 @@ func TestExecPasswordAuthSuccess(t *testing.T) {
 	defer cancel()
 
 	// Happy path: command succeeds with stdout.
-	result, err := Exec(ctx, cfg, "echo hello-ssh-mcp", 5*time.Second)
+	result, err := Exec(ctx, cfg, "echo hello-ssh-skill", 5*time.Second)
 	if err != nil {
 		t.Fatalf("Exec: %v", err)
 	}
 	if result.ExitCode != 0 {
 		t.Errorf("ExitCode = %d, want 0; stderr=%q", result.ExitCode, result.Stderr)
 	}
-	if result.Stdout != "hello-ssh-mcp\n" && result.Stdout != "hello-ssh-mcp\r\n" {
-		t.Errorf("Stdout = %q, want \"hello-ssh-mcp\\n\"", result.Stdout)
+	if result.Stdout != "hello-ssh-skill\n" && result.Stdout != "hello-ssh-skill\r\n" {
+		t.Errorf("Stdout = %q, want \"hello-ssh-skill\\n\"", result.Stdout)
 	}
 }
 

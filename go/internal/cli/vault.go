@@ -4,12 +4,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"ssh-mcp/internal/vault"
+	"ssh-skill/internal/vault"
 )
 
 func cmdVault(args []string) error {
 	if len(args) < 1 {
-		fmt.Println("Usage: ssh-mcp vault init")
+		fmt.Println("Usage: ssh-skill vault init")
 		return nil
 	}
 
@@ -31,7 +31,7 @@ func cmdVault(args []string) error {
 		fmt.Println("Vault key and empty configuration file created.")
 		return nil
 	case "--help", "-h":
-		fmt.Println("Usage: ssh-mcp vault init")
+		fmt.Println("Usage: ssh-skill vault init")
 		return nil
 	default:
 		return fmt.Errorf("unknown vault subcommand: %s", args[0])
