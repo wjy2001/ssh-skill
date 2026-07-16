@@ -10,15 +10,28 @@ audience: [日常使用者, DevOps, 维护者]
 
 日常使用中的常见任务和问题解决。
 
-## Claude Code 集成
+## Claude Code / Codex 集成
 
-### 安装技能
+### 推荐：提示词安装（无需先 clone）
 
-将 `ssh-skill` 技能安装到你的项目或全局 skills 目录时，**同时复制** `SKILL.md` 与 `bin/`（二进制需已构建）：
+分发主路径是 GitHub README 上的**一键安装提示词**：
+
+1. 打开 <https://github.com/wjy2001/ssh-skill>
+2. 复制 README 中的「一键安装提示词」
+3. 粘贴到 Claude Code 或 Codex，让 agent **自动** clone 并安装到全局 skills 目录
+
+用户**不需要**事先拉取本仓库。agent 应同时安装 `SKILL.md` 与 `bin/`（预编译二进制），并执行 `--version` 验证。完整提示词见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
+
+全局落点：
+
+- Linux / macOS: `~/.claude/skills/ssh-skill/`
+- Windows: `%USERPROFILE%\.claude\skills\ssh-skill\`
+
+### 手动安装技能
+
+若你已 clone 仓库，将 `ssh-skill` 安装到全局 skills 目录时，**必须同时复制** `SKILL.md` 与 `bin/`：
 
 ```bash
-# 项目内（相对仓库根）
-mkdir -p .claude/skills/ssh-skill/
 # 仓库已自带预编译 bin/（Linux + Windows），无需构建；如需重构建再跑：
 #   ./scripts/build.sh   # 或 scripts/build.ps1
 # 全局安装示例（Linux / macOS）：

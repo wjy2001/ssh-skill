@@ -37,9 +37,10 @@ docs/
 ### 新用户（5 分钟上手）
 
 1. 先读本页，建立文档地图认知
-2. [`getting-started.md`](./getting-started.md) — 安装 ssh-skill，初始化 vault，执行第一条命令
-3. [`cli-reference.md`](./cli-reference.md) — 了解所有可用命令
-4. [`security.md`](./security.md) — 理解你的凭证如何被保护
+2. 仓库根目录 [`README.md`](../README.md) — 复制「一键安装提示词」，让 Claude Code / Codex 自动安装（无需先 clone）
+3. [`getting-started.md`](./getting-started.md) — 安装路径说明、初始化 vault，执行第一条命令
+4. [`cli-reference.md`](./cli-reference.md) — 了解所有可用命令
+5. [`security.md`](./security.md) — 理解你的凭证如何被保护
 
 ### 日常使用者
 

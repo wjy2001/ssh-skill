@@ -1,6 +1,6 @@
 # ssh-skill
 
-Secure SSH remote operations for AI agents (Claude Code).
+Secure SSH remote operations for AI agents (Claude Code / Codex).
 
 `ssh-skill` is a single Go binary that provides a secure command channel between AI agents and remote servers. It encrypts credentials locally, validates target servers before execution, and audits `exec` operations for auditability.
 
@@ -13,14 +13,79 @@ Secure SSH remote operations for AI agents (Claude Code).
 - **CLI-first**: Usable with or without AI — `ssh-skill exec` works directly in your terminal
 - **Local only**: All configuration and credentials stored in `~/.ssh-skill/`, never leave your machine
 
-## Installation
+## Install with Claude Code / Codex (recommended)
 
-> ssh-skill is a Go CLI. The repository ships **pre-built binaries** for Linux and Windows under `.claude/skills/ssh-skill/bin/` — clone and use directly, no build step required. To rebuild from source (e.g. to pin a custom commit or patch), see [Build from source](#build-from-source-optional) below.
+**你不需要先手动 clone 本仓库。**
+打开本 README → 复制下面提示词 → 粘贴到 Claude Code / Codex → 让 agent 自动安装。
 
-### Use the pre-built binary (recommended)
+### 一键安装提示词（复制即用）
+
+```text
+请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
+
+仓库：https://github.com/wjy2001/ssh-skill
+
+安装目标：
+1. 由你（agent）克隆仓库到本机临时目录；用户无需事先 git clone
+2. 把技能安装到全局 Claude skills 目录，使任意项目可用：
+   - Linux / macOS: ~/.claude/skills/ssh-skill/
+   - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
+3. 安装内容必须同时包含：
+   - SKILL.md
+   - bin/ 目录及其预编译二进制（Linux/macOS: ssh-skill，Windows: ssh-skill.exe）
+4. 安装后验证二进制可运行（--version）
+5. 若全局目录已存在旧版 ssh-skill，先覆盖更新，不要残留旧二进制
+6. 安装完成后用简洁中文汇报：
+   - 安装路径
+   - 版本号输出
+   - 下一步如何初始化 vault / 添加服务器
+
+安装约束：
+- 优先使用仓库自带预编译二进制，不要默认要求用户装 Go
+- 仅在预编译二进制缺失或无法运行时，才尝试从源码构建（需要 Go 1.18+）
+- 不要把任何真实密码写进命令历史示例；演示用占位符即可
+- 不要修改用户已有的 ~/.ssh-skill/ vault 数据，除非用户明确要求初始化
+
+完成后告诉我：现在可以直接说「列出已配置服务器」或「在 my-server 上执行 uptime」。
+```
+
+### 安装后首次配置提示词（可选）
+
+安装完成后，若要继续让 agent 初始化并添加服务器，可再发：
+
+```text
+ssh-skill 已安装。请帮我完成首次配置：
+1. 执行 vault init（幂等，不要清空已有配置）
+2. 询问我服务器信息（id / host / user / auth-type / password 或 key-path）后再 add
+3. 用 test 验证连通性
+4. 不要在聊天中回显明文密码
+```
+
+### Agent 安装后的标准落点
+
+| 平台 | 全局技能路径 |
+|------|----------------|
+| Linux / macOS | `~/.claude/skills/ssh-skill/` |
+| Windows | `%USERPROFILE%\.claude\skills\ssh-skill\` |
+
+目录结构应为：
+
+```text
+~/.claude/skills/ssh-skill/
+├── SKILL.md
+└── bin/
+    ├── ssh-skill          # Linux / macOS
+    └── ssh-skill.exe      # Windows
+```
+
+## Manual Installation
+
+若你更想自己装，而不是让 agent 装：
+
+### Use the pre-built binary
 
 ```bash
-git clone <your-fork-or-mirror-url> ssh-skill
+git clone https://github.com/wjy2001/ssh-skill.git
 cd ssh-skill
 
 # Linux / macOS
@@ -30,34 +95,7 @@ cd ssh-skill
 .\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
 ```
 
-Binaries are checked into the repo under `.claude/skills/ssh-skill/bin/`. No external runtime dependencies; the Go toolchain is only needed if you rebuild from source.
-
-### Build from source (optional)
-
-If you prefer to build locally (e.g. to pin a custom commit or patch):
-
-```bash
-# Linux / macOS
-./scripts/build.sh
-
-# Windows (PowerShell)
-.\scripts\build.ps1
-```
-
-The build script compiles `go/cmd/ssh-skill/` into `.claude/skills/ssh-skill/bin/ssh-skill` (or `ssh-skill.exe` on Windows), overwriting the pre-built binary. Requires Go 1.18+.
-
-### Manual build
-
-If you prefer not to use the build script:
-
-```bash
-cd go
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
-```
-
-### Install the Claude Code skill globally
-
-After cloning, copy the skill directory into your global Claude skills folder so any project can use it:
+### Install the skill globally
 
 ```bash
 # Linux / macOS
@@ -69,11 +107,26 @@ New-Item -ItemType Directory -Force -Path $env:USERPROFILE\.claude\skills\ssh-sk
 Copy-Item .claude\skills\ssh-skill\SKILL.md, .claude\skills\ssh-skill\bin $env:USERPROFILE\.claude\skills\ssh-skill\ -Recurse -Force
 ```
 
-Verify the binary is on your PATH or referenced by the skill:
+### Build from source (optional)
+
+仅在需要改代码或预编译二进制不可用时：
 
 ```bash
-ssh-skill --version
+# Linux / macOS
+./scripts/build.sh
+
+# Windows (PowerShell)
+.\scripts\build.ps1
 ```
+
+或手动：
+
+```bash
+cd go
+go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
+```
+
+需要 Go 1.18+。
 
 ## Quick Start
 
@@ -94,9 +147,19 @@ ssh-skill upload --server my-server --local ./app.tar.gz --remote /tmp/app.tar.g
 ssh-skill list
 ```
 
-## Claude Code Integration
+## Claude Code / Codex Integration
 
-The `ssh-skill` skill is self-contained under `.claude/skills/ssh-skill/` (binary shipped with the repo). After cloning, Claude Code will automatically use the skill when you ask to perform SSH operations — no build step or installer download required.
+推荐分发方式：**用户复制 README 中的安装提示词 → agent 自动 clone + 安装全局 skill**。
+
+安装完成后，直接用自然语言即可，例如：
+
+```text
+帮我在 my-server 上检查磁盘使用情况
+把 app.tar.gz 上传到生产服务器
+列出所有已配置的服务器
+```
+
+技能本体位于仓库 `.claude/skills/ssh-skill/`（含 `SKILL.md` + 预编译 `bin/`）。全局安装后，Claude Code / 兼容 skill 机制的 agent 在处理 SSH 任务时应优先走该技能。
 
 ## Security Model
 

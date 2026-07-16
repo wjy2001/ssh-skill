@@ -10,20 +10,59 @@ audience: [新用户, 所有开发者]
 
 5 分钟内完成安装、初始化并执行第一条远程命令。
 
+**推荐路径**：不先手动 clone。打开 [GitHub README](https://github.com/wjy2001/ssh-skill)，复制「一键安装提示词」，粘贴给 Claude Code / Codex，让 agent 自动安装全局 skill。
+
 ## 前置条件
 
-- Go 1.18+（构建 ssh-skill 二进制；2022 年 3 月发布，绝大多数环境已具备）
 - 目标服务器运行标准 OpenSSH
 - 对目标服务器有 SSH 访问权限（密码、密钥或 SSH agent）
+- 使用预编译二进制时**不需要**安装 Go；仅从源码构建时需要 Go 1.18+
 
-## 安装
+## 安装（推荐：提示词让 agent 安装）
 
-仓库**自带预编译二进制**（Linux 与 Windows），位于 `.claude/skills/ssh-skill/bin/`。clone 后直接可用，无需构建。如需从源码重新构建（例如钉到自定义 commit 或打补丁），见下方[从源码构建](#从源码构建可选)。
+你**不需要**先拉取本仓库。把下面提示词完整复制到 Claude Code 或 Codex：
 
-### 使用预编译二进制（推荐）
+```text
+请帮我安装 GitHub 上的 ssh-skill（安全 SSH 远程操作技能 / CLI）。
+
+仓库：https://github.com/wjy2001/ssh-skill
+
+安装目标：
+1. 由你（agent）克隆仓库到本机临时目录；用户无需事先 clone
+2. 把技能安装到全局 Claude skills 目录，使任意项目可用：
+   - Linux / macOS: ~/.claude/skills/ssh-skill/
+   - Windows: %USERPROFILE%\.claude\skills\ssh-skill\
+3. 安装内容必须同时包含：
+   - SKILL.md
+   - bin/ 目录及其预编译二进制（Linux/macOS: ssh-skill，Windows: ssh-skill.exe）
+4. 安装后验证二进制可运行（--version）
+5. 若全局目录已存在旧版 ssh-skill，先覆盖更新，不要残留旧二进制
+6. 安装完成后用简洁中文汇报：安装路径、版本号、下一步如何 vault init / 添加服务器
+
+安装约束：
+- 优先使用仓库自带预编译二进制，不要默认要求用户装 Go
+- 仅在预编译二进制缺失或无法运行时，才尝试从源码构建（需要 Go 1.18+）
+- 不要把任何真实密码写进命令历史示例
+- 不要修改用户已有的 ~/.ssh-skill/ vault 数据，除非用户明确要求初始化
+```
+
+安装落点：
+
+| 平台 | 全局技能路径 |
+|------|----------------|
+| Linux / macOS | `~/.claude/skills/ssh-skill/` |
+| Windows | `%USERPROFILE%\.claude\skills\ssh-skill\` |
+
+完整提示词与可选「首次配置提示词」见仓库根目录 [`README.md`](../README.md)。
+
+## 手动安装（可选）
+
+仓库**自带预编译二进制**（Linux 与 Windows），位于 `.claude/skills/ssh-skill/bin/`。若你自己 clone，可直接使用，无需构建。
+
+### 使用预编译二进制
 
 ```bash
-git clone <your-fork-or-mirror-url> ssh-skill
+git clone https://github.com/wjy2001/ssh-skill.git
 cd ssh-skill
 
 # Linux / macOS
@@ -62,13 +101,14 @@ go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
 
 ```bash
 ssh-skill --version
-# 或直接调用仓库自带二进制：
+# 或直接调用仓库自带 / 全局 skill 二进制：
 .claude/skills/ssh-skill/bin/ssh-skill --version
+# Windows: %USERPROFILE%\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
 ```
 
 输出版本号即安装成功。
 
-### 安装为 Claude Code 全局技能
+### 安装为 Claude Code 全局技能（手动）
 
 clone 后，把技能目录拷贝到全局 Claude skills 文件夹，任意项目即可使用：
 
