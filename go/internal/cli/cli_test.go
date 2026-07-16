@@ -8,12 +8,12 @@ import (
 	"testing"
 )
 
-// withTempConfigDir points SSH_MCP_CONFIG_DIR at a fresh temp dir for the
+// withTempConfigDir points SSH_SKILL_CONFIG_DIR at a fresh temp dir for the
 // duration of the test, so cli.Load() reads/writes an isolated vault.
 func withTempConfigDir(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	t.Setenv("SSH_MCP_CONFIG_DIR", dir)
+	t.Setenv("SSH_SKILL_CONFIG_DIR", dir)
 	return dir
 }
 
@@ -62,7 +62,7 @@ func TestCmdAddPasswordServer(t *testing.T) {
 	}
 
 	// Verify the vault file exists and is non-empty.
-	dir := os.Getenv("SSH_MCP_CONFIG_DIR")
+	dir := os.Getenv("SSH_SKILL_CONFIG_DIR")
 	vaultPath := filepath.Join(dir, "servers.json.age")
 	info, err := os.Stat(vaultPath)
 	if err != nil {

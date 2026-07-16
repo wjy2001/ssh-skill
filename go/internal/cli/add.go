@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 func cmdAdd(args []string) error {

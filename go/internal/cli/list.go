@@ -16,7 +16,7 @@ func cmdList(args []string) error {
 
 	if len(app.Vault.Servers) == 0 {
 		fmt.Println("No servers configured.")
-		fmt.Println("Add one with: ssh-mcp add")
+		fmt.Println("Add one with: ssh-skill add")
 		return nil
 	}
 

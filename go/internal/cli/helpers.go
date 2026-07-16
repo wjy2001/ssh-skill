@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"ssh-mcp/internal/ssh"
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/ssh"
+	"ssh-skill/internal/types"
 )
 
 // resolveServer finds a server by ID and decrypts its password if needed.

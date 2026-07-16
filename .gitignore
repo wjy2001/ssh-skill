@@ -1,5 +1,5 @@
-# Binary output (bundled with skill)
-.claude/skills/ssh-ops/bin/
+# Skill binaries (shipped with the repo for distribution)
+# .claude/skills/ssh-ops/bin/  -- intentionally NOT ignored
 
 # Harness CE task workspaces (transient artifacts)
 .harness/tasks/
@@ -14,6 +14,7 @@ go/*.exe
 
 # Local context
 .omo/
+.omc/
 
 # Local databases (stray test/dev artifacts from other tools)
 *.db

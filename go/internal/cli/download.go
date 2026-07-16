@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"ssh-mcp/internal/ssh"
+	"ssh-skill/internal/ssh"
 )
 
 func cmdDownload(args []string) error {

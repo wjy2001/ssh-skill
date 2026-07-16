@@ -74,7 +74,7 @@ type FileTransferResult struct {
 type ProgressCallback func(bytesTransferred, totalBytes int64, elapsed time.Duration)
 
 // AuditEntry represents a single command execution audit record.
-// Stored as JSONL in ~/.ssh-mcp/audit.log.
+// Stored as JSONL in ~/.ssh-skill/audit.log.
 type AuditEntry struct {
 	Timestamp  string `json:"timestamp"`
 	ServerID   string `json:"server_id"`

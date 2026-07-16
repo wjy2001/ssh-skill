@@ -1,19 +1,19 @@
 ---
 title: CLI 命令参考
-description: ssh-mcp 全部 CLI 子命令、参数和用法参考
+description: ssh-skill 全部 CLI 子命令、参数和用法参考
 doc_type: reference
-last_updated: 2026-07-06
+last_updated: 2026-07-15
 audience: [所有开发者, 日常使用者]
 ---
 
 # CLI 命令参考
 
-`ssh-mcp` 是单一二进制，通过子命令路由。所有命令以 `ssh-mcp <subcommand> [flags]` 形式调用。
+`ssh-skill` 是单一二进制，通过子命令路由。所有命令以 `ssh-skill <subcommand> [flags]` 形式调用。
 
 ## 全局约定
 
-- `--server` / `-s`：引用已配置服务器的 ID（通过 `ssh-mcp add --id` 指定）
-- 所有服务器配置和凭证存储在 `~/.ssh-mcp/`（可通过 `SSH_MCP_CONFIG_DIR` 环境变量覆盖）
+- `--server`：引用已配置服务器的 ID（通过 `ssh-skill add --id` 指定）
+- 所有服务器配置和凭证存储在 `~/.ssh-skill/`（可通过 `SSH_SKILL_CONFIG_DIR` 环境变量覆盖）
 - 每个 `exec` 命令自动写入审计日志
 
 ## 命令总览
@@ -28,16 +28,15 @@ audience: [所有开发者, 日常使用者]
 | `upload` | 上传文件到远程服务器 | ✅ |
 | `download` | 从远程服务器下载文件 | ✅ |
 | `test` | 测试 SSH 连接 | ✅ |
-| `serve` | 启动 MCP 服务模式（**未实现**,仅占位） | ✅ |
 
 ---
 
 ## vault init
 
-初始化加密保险库，创建 `~/.ssh-mcp/` 目录和加密密钥。
+初始化加密保险库，创建 `~/.ssh-skill/` 目录和加密密钥。
 
 ```bash
-ssh-mcp vault init
+ssh-skill vault init
 ```
 
 **行为**：
@@ -45,7 +44,7 @@ ssh-mcp vault init
 - 生成 32 字节随机 AES-256 密钥
 - 创建空加密配置文件
 
-> 配置目录可通过 `SSH_MCP_CONFIG_DIR` 环境变量覆盖，**不接受命令行 flag**（这是有意设计，避免每个命令都要重复解析 config-dir flag）。
+> 配置目录可通过 `SSH_SKILL_CONFIG_DIR` 环境变量覆盖，**不接受命令行 flag**（这是有意设计，避免每个命令都要重复解析 config-dir flag）。
 
 ---
 
@@ -54,7 +53,7 @@ ssh-mcp vault init
 添加服务器配置。密码经 AES-256-GCM 加密后存储。
 
 ```bash
-ssh-mcp add [flags]
+ssh-skill add [flags]
 ```
 
 **必需标志**：
@@ -84,7 +83,7 @@ ssh-mcp add [flags]
 删除服务器配置。
 
 ```bash
-ssh-mcp remove --id <server-id>
+ssh-skill remove --id <server-id>
 ```
 
 **必需标志**：
@@ -100,19 +99,21 @@ ssh-mcp remove --id <server-id>
 列出所有已配置的服务器（不含密码）。
 
 ```bash
-ssh-mcp list [flags]
+ssh-skill list [flags]
 ```
 
-输出表格：ID、名称、主机、端口、用户、认证类型。
+输出表格列：`ID`、`HOST`（`host:port`）、`NAME`、`AUTH`（认证类型；`key` 时可能显示 `key:<path>`）。
 
 ---
 
 ## exec
 
-在远程服务器执行命令。**此命令会触发 Claude Code 审批对话框。**
+在远程服务器执行命令。
+
+审批仅当经 Claude Code skill / Bash 权限策略调用时出现；裸 CLI 二进制直接运行时无审批。
 
 ```bash
-ssh-mcp exec --server <id> --command <cmd>
+ssh-skill exec --server <id> --command <cmd>
 ```
 
 **必需标志**：
@@ -128,7 +129,14 @@ ssh-mcp exec --server <id> --command <cmd>
 |------|------|------|------|
 | `--timeout` | int | `30` | 命令超时（秒） |
 
-**退出码**：远程命令的退出码透传（0 表示成功，非零表示远程命令失败）。`255` 或 `-1` 表示连接或会话创建失败（非远程命令本身的退出码）。
+**退出码**（方案 B）：
+
+| 进程退出码 | 含义 |
+|-----------|------|
+| `0` | 客户端成功完成 SSH 会话（**含**远程命令非零退出） |
+| `1` | 客户端/配置/连接/会话建立失败 |
+
+远程命令的退出码写入审计日志 `audit.log` 的 `exit_code` 字段，**不会**透传为进程退出码。不要依赖进程状态判断远程成功与否；也不要把 `255`/`-1` 当作本工具的进程退出码语义。
 
 ---
 
@@ -137,7 +145,7 @@ ssh-mcp exec --server <id> --command <cmd>
 上传本地文件到远程服务器（SFTP）。
 
 ```bash
-ssh-mcp upload --server <id> --local <path> --remote <path> [flags]
+ssh-skill upload --server <id> --local <path> --remote <path> [flags]
 ```
 
 **必需标志**：
@@ -155,7 +163,7 @@ ssh-mcp upload --server <id> --local <path> --remote <path> [flags]
 从远程服务器下载文件（SFTP）。
 
 ```bash
-ssh-mcp download --server <id> --remote <path> --local <path> [flags]
+ssh-skill download --server <id> --remote <path> --local <path> [flags]
 ```
 
 **必需标志**：
@@ -173,7 +181,7 @@ ssh-mcp download --server <id> --remote <path> --local <path> [flags]
 测试与服务器的 SSH 连接。验证认证、加密和网络连通性。
 
 ```bash
-ssh-mcp test --server <id> [flags]
+ssh-skill test --server <id> [flags]
 ```
 
 **必需标志**：
@@ -182,21 +190,8 @@ ssh-mcp test --server <id> [flags]
 |------|------|------|
 | `--server` | string | 目标服务器 ID |
 
-**输出**：成功时输出 "OK"，失败时输出具体错误原因。
+**输出**：成功时输出类似 `Connection to <host:port> OK — <N>ms` 的消息；失败时输出具体错误原因。
 
----
-
-## serve
-
-启动 MCP（Model Context Protocol）服务模式。**当前未实现**，运行时仅打印提示信息：
-
-```
-MCP server mode is not yet implemented.
-Use the CLI subcommands directly, or configure as an MCP server with:
-  claude mcp add ssh-mcp -- /path/to/ssh-mcp serve
-```
-
-后续版本将通过 stdio 暴露 MCP 工具调用接口，使 AI agent 可经标准协议调用 SSH 操作。当前请直接使用 CLI 子命令。
 
 ---
 

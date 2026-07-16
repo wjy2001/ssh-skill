@@ -1,4 +1,4 @@
-module ssh-mcp
+module ssh-skill
 
 go 1.18
 

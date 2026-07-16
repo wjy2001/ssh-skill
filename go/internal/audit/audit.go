@@ -1,4 +1,4 @@
-// Package audit provides JSONL audit logging for ssh-mcp command executions.
+// Package audit provides JSONL audit logging for ssh-skill command executions.
 package audit
 
 import (
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 // Logger writes audit entries in JSONL format to a file.

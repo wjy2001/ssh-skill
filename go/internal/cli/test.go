@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"ssh-mcp/internal/ssh"
+	"ssh-skill/internal/ssh"
 )
 
 func cmdTest(args []string) error {

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"ssh-mcp/internal/cli"
+	"ssh-skill/internal/cli"
 )
 
 // version is injected at build time via:

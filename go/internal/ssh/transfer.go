@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/sftp"
 
-	"ssh-mcp/internal/types"
+	"ssh-skill/internal/types"
 )
 
 // transferBufferSize is the buffer size used for file transfers (256KB).

@@ -1,12 +1,12 @@
 ---
-title: ssh-mcp 文档索引
-description: ssh-mcp 的文档导航枢纽，按角色和主题组织所有项目文档的入口
+title: ssh-skill 文档索引
+description: ssh-skill 的文档导航枢纽，按角色和主题组织所有项目文档的入口
 doc_type: reference
-last_updated: 2026-07-06
+last_updated: 2026-07-15
 audience: [所有开发者, AI Agent]
 ---
 
-# ssh-mcp 文档索引
+# ssh-skill 文档索引
 
 安全 SSH 远程操作 CLI 工具 — 为 AI agent（Claude Code）和开发者提供加密凭证存储、目标服务器校验和可审计的命令执行通道。
 
@@ -37,7 +37,7 @@ docs/
 ### 新用户（5 分钟上手）
 
 1. 先读本页，建立文档地图认知
-2. [`getting-started.md`](./getting-started.md) — 安装 ssh-mcp，初始化 vault，执行第一条命令
+2. [`getting-started.md`](./getting-started.md) — 安装 ssh-skill，初始化 vault，执行第一条命令
 3. [`cli-reference.md`](./cli-reference.md) — 了解所有可用命令
 4. [`security.md`](./security.md) — 理解你的凭证如何被保护
 
@@ -86,15 +86,15 @@ docs/
 | --- | --- |
 | Vault（凭证保险库） | [`security.md#vault-加密存储`](./security.md#vault-加密存储) |
 | AES-256-GCM | [`security.md#加密方案`](./security.md#加密方案) |
-| Argon2id 密钥派生 | [`security.md#密钥派生`](./security.md#密钥派生) |
+| Argon2id 密钥派生 | [`security.md#加密方案`](./security.md#加密方案) |
 | 审计日志（JSONL） | [`security.md#审计日志`](./security.md#审计日志) |
-| 分层架构（Types → Config → Repo → Service → CLI → UI） | [`architecture.md#分层结构`](./architecture.md#分层结构) |
+| 分层架构（UI → CLI → Service → Config → Types） | [`architecture.md#分层结构`](./architecture.md#分层结构) |
 | MCP Server 模式 | [`cli-reference.md#serve`](./cli-reference.md#serve) |
 | 目标服务器校验 | [`security.md#目标校验`](./security.md#目标校验) |
 
 ## 文档约定
 
-- **CLI 参考**：以 `ssh-mcp --help` 输出为权威来源，本文档提供中文阅读层和补充说明
+- **CLI 参考**：以 `ssh-skill --help` 输出为权威来源，本文档提供中文阅读层和补充说明
 - **架构文档**：描述"是什么、为什么这样分层"，不重复代码细节
 - **操作指南**：面向任务，回答"怎么做"，提供可复制执行的命令
 - **安全文档**：记录威胁模型、加密方案和设计决策，回答"为什么安全"
