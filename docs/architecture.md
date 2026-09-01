@@ -98,12 +98,7 @@ ssh-skill/
 │   ├── SKILL.md                  # 技能描述、安全规则、工作流
 │   └── bin/                      # 预编译二进制（已签入仓库分发）
 ├── scripts/                      # 跨平台构建脚本
-├── docs/                         # 项目文档（你在读的）
-└── .harness/                     # Harness CE 任务管理
-    ├── knowledge/                # AI agent 知识库
-    ├── agents/                   # Agent 行为规范
-    ├── tasks/                    # 任务工作区
-    └── templates/                # 文档模板
+└── docs/                         # 项目文档（你在读的）
 ```
 
 ## 数据流
@@ -177,12 +172,8 @@ cli/progress.go → 渲染进度条到 stderr
 | `github.com/pkg/sftp` | SFTP 文件传输 | Service（`internal/ssh`） |
 | `golang.org/x/sys` | `x/crypto` 的间接依赖 | 间接 |
 
-详见 `.harness/knowledge/DEPENDENCIES.md`。
-
 ## 相关文档
 
 - [`security.md`](./security.md) — 加密和凭证存储细节
 - [`cli-reference.md`](./cli-reference.md) — CLI 命令参考
-- [`.harness/knowledge/ARCHITECTURE.md`](../.harness/knowledge/ARCHITECTURE.md) — AI agent 遵守的架构约束
-- [`.harness/knowledge/DEPENDENCIES.md`](../.harness/knowledge/DEPENDENCIES.md) — 依赖策略和升级流程
 - 总索引：[`index.md`](./index.md)

@@ -1,8 +1,10 @@
 # Skill binaries (shipped with the repo for distribution)
 # .claude/skills/ssh-ops/bin/  -- intentionally NOT ignored
 
-# Harness CE task workspaces (transient artifacts)
-.harness/tasks/
+# Harness CE 工作区与 AI 项目指令（本地保留，不进版本库）
+.harness/
+AGENTS.md
+CLAUDE.md
 
 # Go build artifacts
 go/bin/

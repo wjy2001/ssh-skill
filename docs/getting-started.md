@@ -26,7 +26,7 @@ audience: [新用户, 所有开发者]
 - 权威指令：[`install/PROMPT.md`](../install/PROMPT.md)
 - 稳定 raw：`https://raw.githubusercontent.com/wjy2001/ssh-skill/master/install/PROMPT.md`
 
-安装面只允许：`SKILL.md` + 当前平台二进制（约 6MB），不要 `go/`、`.harness/`、docs 源码树。
+安装面只允许：`SKILL.md` + 当前平台二进制（约 6MB），不要 `go/`、docs 源码树。
 
 ### 给 agent 的短提示词（复制即用）
 

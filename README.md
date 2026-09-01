@@ -207,8 +207,7 @@ ssh-skill/
 │       └── cli/                  # CLI subcommands
 ├── .claude/skills/ssh-skill/       # Claude Code skill (SKILL.md + checked-in bin/)
 ├── scripts/                      # Cross-platform build scripts (build.sh, build.ps1)
-├── docs/                         # Project documentation
-└── .harness/                     # Harness CE task management
+└── docs/                         # Project documentation
 ```
 
 ## Requirements

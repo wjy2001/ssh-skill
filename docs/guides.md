@@ -26,7 +26,7 @@ audience: [日常使用者, DevOps, 维护者]
    - Windows: `irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.ps1 | iex`
 
 安装结果只应包含 `SKILL.md` + **当前平台**二进制。
-**禁止** agent 为安装目的执行 `git clone` / 下载 zipball / 拉取 `go/` `.harness/` 等全量树。
+**禁止** agent 为安装目的执行 `git clone` / 下载 zipball / 拉取 `go/` 等全量树。
 
 用户复制的短提示词不用随安装细节变更而更新；改 `install/PROMPT.md` / `scripts/install-skill.*` 即可实时生效。
 详见 [`README.md`](../README.md) 与 [`getting-started.md`](./getting-started.md)。
