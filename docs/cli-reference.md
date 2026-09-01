@@ -134,7 +134,7 @@ ssh-skill exec --server <id> --command <cmd>
 | 进程退出码 | 含义 |
 |-----------|------|
 | `0` | 客户端成功完成 SSH 会话（**含**远程命令非零退出） |
-| `1` | 客户端/配置/连接/会话建立失败 |
+| `1` | 客户端/配置/连接/会话建立失败（失败原因先打印到 stderr 再退出码 1） |
 
 远程命令的退出码写入审计日志 `audit.log` 的 `exit_code` 字段，**不会**透传为进程退出码。不要依赖进程状态判断远程成功与否；也不要把 `255`/`-1` 当作本工具的进程退出码语义。
 
@@ -142,7 +142,7 @@ ssh-skill exec --server <id> --command <cmd>
 
 ## upload
 
-上传本地文件到远程服务器（SFTP）。
+上传本地文件到远程服务器（SFTP）。传输失败自动重试整传，至多 3 次（每次重连，错误信息带 `attempt N/3` 前缀）；SFTP 并发读写提升高延迟链路吞吐。
 
 ```bash
 ssh-skill upload --server <id> --local <path> --remote <path> [flags]
@@ -160,7 +160,7 @@ ssh-skill upload --server <id> --local <path> --remote <path> [flags]
 
 ## download
 
-从远程服务器下载文件（SFTP）。
+从远程服务器下载文件（SFTP）。传输失败自动重试整传，至多 3 次（每次重连，错误信息带 `attempt N/3` 前缀）。
 
 ```bash
 ssh-skill download --server <id> --remote <path> --local <path> [flags]

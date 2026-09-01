@@ -31,13 +31,17 @@ var (
 // terminal SSH client and — when present — the bastion client are released.
 type Client struct {
 	*ssh.Client
-	bastion *ssh.Client // nil for direct connections
+	bastion       *ssh.Client // nil for direct connections
+	stopKeepAlive func()      // stops the keepalive goroutine; nil when not started
 }
 
 // Close closes the underlying ssh.Client and, if present, the bastion client.
 // It returns the first error encountered; bastion close errors are ignored
 // when the primary close already failed.
 func (c *Client) Close() error {
+	if c.stopKeepAlive != nil {
+		c.stopKeepAlive()
+	}
 	primaryErr := c.Client.Close()
 	if c.bastion != nil {
 		_ = c.bastion.Close()
@@ -90,7 +94,7 @@ func Connect(ctx context.Context, cfg *types.ServerConfig) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{Client: sshClient}, nil
+	return &Client{Client: sshClient, stopKeepAlive: StartKeepAlive(sshClient, DefaultKeepAliveInterval)}, nil
 }
 
 func connect(ctx context.Context, addr string, cfg *ssh.ClientConfig) (*ssh.Client, error) {
@@ -98,6 +102,13 @@ func connect(ctx context.Context, addr string, cfg *ssh.ClientConfig) (*ssh.Clie
 	conn, err := d.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("%w: dial %s: %w", ErrConnectFailed, addr, err)
+	}
+
+	// Enlarge TCP buffer (Windows defaults to 8-64KB), which caps throughput
+	// on high-latency links. 1MB both directions. 原始代码无此设置。
+	if tc, ok := conn.(*net.TCPConn); ok {
+		tc.SetReadBuffer(1 << 20)
+		tc.SetWriteBuffer(1 << 20)
 	}
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, addr, cfg)
@@ -148,10 +159,14 @@ func connectViaBastion(ctx context.Context, targetAddr string, targetCfg *ssh.Cl
 	}
 
 	// Wrap so the returned Client owns the bastion lifecycle via Close().
-	return &Client{
+	// Keepalive runs against the outermost bastion connection, since that is
+	// the link the local NAT/firewall watches for idle expiry.
+	client := &Client{
 		Client:  ssh.NewClient(c, chans, reqs),
 		bastion: bastionClient,
-	}, nil
+	}
+	client.stopKeepAlive = StartKeepAlive(bastionClient, DefaultKeepAliveInterval)
+	return client, nil
 }
 
 // buildAuthMethods constructs the SSH authentication method list from the server config.

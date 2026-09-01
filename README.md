@@ -9,6 +9,7 @@ Secure SSH remote operations for AI agents (Claude Code / Codex).
 - **Secure credential storage**: AES-256-GCM encrypted vault, auto-generated key
 - **Target validation**: Commands can only target pre-configured servers (prevents AI hallucination)
 - **Multi-auth support**: Password, SSH key, and SSH agent authentication
+- **Reliable transfer**: Upload/download auto-retry up to 3 times on failure; SFTP concurrent read/write + keepalive heartbeat for slow or NAT'd links
 - **Audit logging**: Every `exec` is logged to a JSONL audit trail (upload/download/test and config commands are not audited today)
 - **CLI-first**: Usable with or without AI — `ssh-skill exec` works directly in your terminal
 - **Local only**: All configuration and credentials stored in `~/.ssh-skill/`, never leave your machine

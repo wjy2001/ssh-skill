@@ -65,7 +65,7 @@ ssh-skill/
 │   ├── go.mod                    # 模块定义（module ssh-skill）
 │   ├── go.sum                    # 依赖校验锁文件
 │   ├── cmd/ssh-skill/
-│   │   └── main.go               # 单一入口；非 0 错误时 os.Exit(1)
+│   │   └── main.go               # 单一入口；出错时先打印错误到 stderr 再 os.Exit(1)
 │   └── internal/
 │       ├── types/
 │       │   └── types.go          # 共享类型定义
@@ -78,7 +78,9 @@ ssh-skill/
 │       ├── ssh/
 │       │   ├── client.go         # SSH 连接管理（Client 包装 + bastion 生命周期）
 │       │   ├── exec.go           # 远程命令执行（从 *ssh.ExitError 提取远程退出码到结果结构体）
-│       │   └── transfer.go       # SFTP 文件传输（进度回调）
+│       │   ├── keepalive.go      # SSH keepalive 心跳（15s，防 NAT/防火墙空闲断连）
+│       │   ├── sftp.go           # SFTP 客户端构建（并发读写）+ 单次上传/下载
+│       │   └── transfer.go       # 传输入口（失败自动重试至多 3 次）
 │       ├── audit/
 │       │   └── audit.go          # JSONL 审计日志写入
 │       └── cli/
@@ -130,7 +132,7 @@ audit/audit.go
     ▼
 stdout: "14:32:15 up 30 days, ..."
 进程退出码：0（客户端成功完成会话，即使远程命令非零）
-            1（连接/配置/客户端错误；main 在 Run 返回 error 时 os.Exit(1)）
+            1（连接/配置/客户端错误；main 先把错误信息打印到 stderr 再 os.Exit(1)）
 ```
 
 **进程退出码 vs 远程退出码**（方案 B）：
@@ -153,11 +155,16 @@ cli/upload.go → resolveServer() → 解密 cfg
     │   （download 对应 cli/download.go，同一模式）
     ▼
 ssh/client.go → Connect() 返回 *Client
+    │   连接成功后启动 15s keepalive 心跳（keepalive.go；bastion 场景打在外层链路）
+    ▼
+ssh/transfer.go → 失败自动重试至多 3 次（指数退避 2s/4s，每次重连从 0 重传）
     │
     ▼
-ssh/transfer.go → SFTP 客户端（github.com/pkg/sftp）
-    │ progressReader 包装 io.Reader，每 100ms 触发回调
-    │ io.CopyBuffer + 256KB 缓冲
+ssh/sftp.go → SFTP 客户端（github.com/pkg/sftp）
+    │   并发读写 + MaxPacketUnchecked(64KB) + MaxConcurrentRequestsPerFile(16)，摊薄高延迟 RTT
+    │   progressReader 包装 io.Reader，每 100ms 触发回调
+    │   上传：io.Copy 走 remoteFile.ReadFrom → Size() 暴露文件大小触发并发写，完成后 Truncate 修正
+    │   下载：remoteFile.WriteTo(progressWriter) 走 pkg/sftp 原生并发读，进度由 progressWriter 计
     ▼
 cli/progress.go → 渲染进度条到 stderr
 ```
