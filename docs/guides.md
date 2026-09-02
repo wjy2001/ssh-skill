@@ -174,6 +174,24 @@ go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skil
 
 ## 排错
 
+### Windows Git Bash 远端绝对路径被改写
+
+**症状**：在 Git Bash 中执行 `upload --remote /opt/...` 或 `exec --command "... /opt/..."` 时，报错路径被改为 `C:/Program Files/Git/opt/...`。
+
+**原因**：MSYS2 会在启动 Windows 原生 `.exe` 前自动转换看似 Unix 路径的参数；`/opt/...` 是远端 POSIX 路径，却被误认为本机路径。
+
+**解决**：使用仓库随附的 `bin/ssh-skill` launcher。它会自动保护 `--remote` 和 `--command` 的远端 POSIX 语义，同时保留 `--local /c/...` 的本地路径转换；不需要手动设置 `MSYS_NO_PATHCONV` 或 `MSYS2_ARG_CONV_EXCL`。
+
+```bash
+# Git Bash：始终经 launcher 调用，不要直接调用 *.exe
+~/.claude/skills/ssh-skill/bin/ssh-skill upload \
+  --server prod-web \
+  --local /c/Users/me/app.tar \
+  --remote /opt/app/app.tar
+```
+
+PowerShell 不经过 MSYS2，可直接调用 `ssh-skill-windows-amd64.exe`。
+
 ### vault init 行为（幂等）
 
 `ssh-skill vault init` **是幂等的**，不会因目录或 vault 已存在而报错 “vault already exists”。
