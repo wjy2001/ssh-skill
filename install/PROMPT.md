@@ -10,9 +10,13 @@
 把 `ssh-skill` 安装为**全局 Claude skill**，且只下载：
 
 1. `SKILL.md`
-2. **当前平台**预编译二进制
+2. `bin/ssh-skill` —— **平台无关 launcher**（脚本，负责按当前 OS 选择正确二进制）
+3. **当前平台**预编译二进制
 
 **不要**安装或下载：`go/`、docs 源码树、另一平台二进制、全量 git 仓库。
+
+> 为何有 launcher：`SKILL.md` 统一调用 `${CLAUDE_SKILL_DIR}/bin/ssh-skill`，由 launcher 按 `uname -s` 自动选择
+> `ssh-skill-linux-amd64` / `ssh-skill-darwin-amd64` / `ssh-skill-windows-amd64.exe`，安装者无需关心当前 OS。
 
 ## 硬性约束
 
@@ -35,8 +39,13 @@
 ~/.claude/skills/ssh-skill/
 ├── SKILL.md
 └── bin/
-    └── ssh-skill        # 或 Windows 下的 ssh-skill.exe
+    ├── ssh-skill                      # launcher（平台无关，统一入口）
+    ├── ssh-skill-linux-amd64          # Linux x86-64
+    ├── ssh-skill-darwin-amd64         # macOS x86-64
+    └── ssh-skill-windows-amd64.exe    # Windows x86-64
 ```
+
+一个平台实际只下载 launcher + **该平台对应**的那一个二进制。
 
 ## 推荐执行方式（优先）
 
@@ -54,9 +63,9 @@ irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-s
 
 脚本会：
 
-- 只下载 `SKILL.md` + 当前平台二进制
+- 只下载 `SKILL.md` + `bin/ssh-skill`（launcher）+ 当前平台二进制
 - 覆盖旧版 skill
-- 删除另一平台残留二进制
+- 删除另一平台残留二进制（含旧版 `ssh-skill.exe`）
 - 运行 `--version` 验证
 - **不**触碰 vault
 
@@ -66,30 +75,35 @@ irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-s
 
 - Skill 定义：  
   `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/SKILL.md`
-- Linux / macOS 二进制：  
+- launcher（所有平台都要）：  
   `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/ssh-skill`
-- Windows 二进制：  
-  `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/ssh-skill.exe`
+- Linux x86-64 二进制：  
+  `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64`
+- macOS x86-64 二进制：  
+  `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/ssh-skill-darwin-amd64`
+- Windows x86-64 二进制：  
+  `https://raw.githubusercontent.com/wjy2001/ssh-skill/master/.claude/skills/ssh-skill/bin/ssh-skill-windows-amd64.exe`
 
 下载后写入上述全局 skill 路径，并 `chmod +x`（Unix）后执行 `--version`。
+预编译二进制只提供 **amd64**；ARM64 用户需从源码构建（`./scripts/build.sh <os> arm64` 或 `.\scripts\build.ps1`）。
 
 ## 验证
 
 安装后必须验证：
 
 ```bash
-# Linux / macOS
+# Linux / macOS / Windows-Git-Bash（launcher 自动选平台二进制）
 ~/.claude/skills/ssh-skill/bin/ssh-skill --version
 
-# Windows
-%USERPROFILE%\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
+# Windows (PowerShell) 不能执行无扩展名的 launcher，直接验证 .exe
+%USERPROFILE%\.claude\skills\ssh-skill\bin\ssh-skill-windows-amd64.exe --version
 ```
 
 ## 完成后汇报（简洁中文）
 
 1. 安装路径
 2. 版本号输出
-3. 下载了哪些文件（应只有 skill + 当前平台二进制）
+3. 下载了哪些文件（应只有 skill + launcher + 当前平台二进制）
 4. 下一步：`vault init` / 添加服务器（**先询问用户**，不要擅自改 vault）
 
 可提示用户接下来可以说：
@@ -111,3 +125,4 @@ irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-s
 - 本文件可随时更新；用户侧 README 短提示词无需改动
 - 安装脚本变更时，同步更新本文件中的命令与约束
 - 二进制路径变更时，同步更新 raw URL
+- `bin/ssh-skill` 固定为 launcher；真实二进制一律以 `ssh-skill-<os>-<arch>[.exe]` 命名，切勿覆盖 launcher

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Minimal installer: only SKILL.md + current-platform binary.
+# Minimal installer: SKILL.md + platform-agnostic launcher + current-platform binary.
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-skill.sh | bash
 #   bash install-skill.sh [ref]
@@ -12,27 +12,31 @@ RAW_BASE="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REF}/.c
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 case "$OS" in
-  linux*|darwin*)
-    BIN_NAME="ssh-skill"
-    DEST_DIR="${HOME}/.claude/skills/ssh-skill"
-    ;;
+  linux*)  PLATFORM="linux";  DEST_DIR="${HOME}/.claude/skills/ssh-skill" ;;
+  darwin*) PLATFORM="darwin"; DEST_DIR="${HOME}/.claude/skills/ssh-skill" ;;
   msys*|mingw*|cygwin*)
-    BIN_NAME="ssh-skill.exe"
+    PLATFORM="windows"
     DEST_DIR="${USERPROFILE:-$HOME}/.claude/skills/ssh-skill"
     DEST_DIR="$(cygpath -u "$DEST_DIR" 2>/dev/null || echo "$DEST_DIR")"
     ;;
-  *)
-    echo "Unsupported OS: $OS" >&2
-    exit 1
-    ;;
+  *) echo "Unsupported OS: $OS" >&2; exit 1 ;;
 esac
+
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64|amd64) BIN_ARCH="amd64" ;;
+  *) echo "No prebuilt binary for arch '$ARCH' (amd64 only); build with scripts/build.sh" >&2; exit 1 ;;
+esac
+
+BIN_NAME="ssh-skill-${PLATFORM}-${BIN_ARCH}"
+if [ "$PLATFORM" = "windows" ]; then BIN_NAME="${BIN_NAME}.exe"; fi
 
 BIN_DIR="${DEST_DIR}/bin"
 TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-echo "==> Installing ssh-skill skill (minimal: SKILL.md + ${BIN_NAME})"
+echo "==> Installing ssh-skill skill (SKILL.md + launcher + ${BIN_NAME})"
 echo "    source: ${RAW_BASE}"
 echo "    dest:   ${DEST_DIR}"
 
@@ -52,21 +56,24 @@ download() {
 }
 
 download "${RAW_BASE}/SKILL.md" "${TMP_DIR}/SKILL.md"
-download "${RAW_BASE}/bin/${BIN_NAME}" "${TMP_DIR}/${BIN_NAME}"
+download "${RAW_BASE}/bin/ssh-skill" "${TMP_DIR}/ssh-skill"      # launcher
+download "${RAW_BASE}/bin/${BIN_NAME}" "${TMP_DIR}/${BIN_NAME}"  # real binary
 
 # Overwrite skill files only; never touch ~/.ssh-skill vault.
 install -m 0644 "${TMP_DIR}/SKILL.md" "${DEST_DIR}/SKILL.md"
+install -m 0755 "${TMP_DIR}/ssh-skill" "${BIN_DIR}/ssh-skill"
 install -m 0755 "${TMP_DIR}/${BIN_NAME}" "${BIN_DIR}/${BIN_NAME}"
 
-# Remove the other platform binary if an old full copy left it behind.
-if [[ "$BIN_NAME" == "ssh-skill" ]]; then
-  rm -f "${BIN_DIR}/ssh-skill.exe"
-else
-  rm -f "${BIN_DIR}/ssh-skill"
-fi
+# Remove stale binaries left by older installs / other platforms.
+rm -f "${BIN_DIR}/ssh-skill.exe"   # old pre-launcher Windows binary name
+case "$PLATFORM" in
+  linux)   rm -f "${BIN_DIR}"/ssh-skill-windows-*.exe "${BIN_DIR}"/ssh-skill-darwin-* ;;
+  darwin)  rm -f "${BIN_DIR}"/ssh-skill-windows-*.exe "${BIN_DIR}"/ssh-skill-linux-* ;;
+  windows) rm -f "${BIN_DIR}"/ssh-skill-linux-* "${BIN_DIR}"/ssh-skill-darwin-* ;;
+esac
 
 echo "==> Verifying..."
-"${BIN_DIR}/${BIN_NAME}" --version
+"${BIN_DIR}/ssh-skill" --version
 
 echo "==> Done."
 echo "    skill: ${DEST_DIR}"

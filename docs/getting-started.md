@@ -63,7 +63,7 @@ irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-s
 
 ## 手动安装（可选）
 
-仓库**自带预编译二进制**（Linux 与 Windows），位于 `.claude/skills/ssh-skill/bin/`。若你自己 clone，可直接使用，无需构建。
+仓库**自带预编译二进制**（linux / darwin / windows amd64）与**平台无关 launcher** `ssh-skill`，位于 `.claude/skills/ssh-skill/bin/`。若你自己 clone，可直接使用，无需构建——`bin/ssh-skill` 会自动根据当前 OS 选择正确的二进制。
 
 ### 使用预编译二进制
 
@@ -71,11 +71,11 @@ irm https://raw.githubusercontent.com/wjy2001/ssh-skill/master/scripts/install-s
 git clone https://github.com/wjy2001/ssh-skill.git
 cd ssh-skill
 
-# Linux / macOS
+# Linux / macOS / Windows(Git Bash)——launcher 自动选择当前平台二进制
 .claude/skills/ssh-skill/bin/ssh-skill --version
 
-# Windows (PowerShell)
-.\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
+# Windows (PowerShell) 不能直接运行无扩展名的 launcher，请用完整二进制名：
+.\.claude\skills\ssh-skill\bin\ssh-skill-windows-amd64.exe --version
 ```
 
 二进制已签入仓库，无运行时依赖。仅在重新构建时需要 Go 工具链（1.18+）。
@@ -92,7 +92,7 @@ cd ssh-skill
 .\scripts\build.ps1
 ```
 
-构建脚本把 `go/cmd/ssh-skill/` 编译到 `.claude/skills/ssh-skill/bin/ssh-skill`（Windows 下为 `ssh-skill.exe`），会覆盖仓库自带的预编译二进制。需要 Go 1.18+。
+构建脚本把 `go/cmd/ssh-skill/` 编译到 `.claude/skills/ssh-skill/bin/`（输出带 `<os>-<arch>` 后缀，如 `ssh-skill-linux-amd64` / `ssh-skill-windows-amd64.exe`），并同步到 Codex 分发副本 `.agents/skills/ssh-skill/bin/`。`bin/ssh-skill` launcher 不会被覆盖。需要 Go 1.18+。
 
 ### 手动构建
 
@@ -100,7 +100,7 @@ cd ssh-skill
 
 ```bash
 cd go
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
+GOOS=linux GOARCH=amd64 go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skill/
 ```
 
 ### 验证安装
@@ -109,7 +109,7 @@ go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
 ssh-skill --version
 # 或直接调用仓库自带 / 全局 skill 二进制：
 .claude/skills/ssh-skill/bin/ssh-skill --version
-# Windows: %USERPROFILE%\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
+# Windows: %USERPROFILE%\.claude\skills\ssh-skill\bin\ssh-skill-windows-amd64.exe --version
 ```
 
 输出版本号即安装成功。

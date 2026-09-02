@@ -41,8 +41,9 @@ audience: [日常使用者, DevOps, 维护者]
 若你已 clone 仓库，将 `ssh-skill` 安装到全局 skills 目录时，**必须同时复制** `SKILL.md` 与 `bin/`：
 
 ```bash
-# 仓库已自带预编译 bin/（Linux + Windows），无需构建；如需重构建再跑：
-#   ./scripts/build.sh   # 或 scripts/build.ps1
+# 仓库已自带预编译 bin/（launcher + linux/darwin/windows amd64 二进制），无需构建；如需重构建再跑：
+#   ./scripts/build.sh          # Linux/macOS/Windows-Git-Bash，默认构建当前平台（输出带 <os>-<arch> 后缀）
+#   .\scripts\build.ps1         # Windows (PowerShell)
 # 全局安装示例（Linux / macOS）：
 mkdir -p ~/.claude/skills/ssh-skill
 cp -r .claude/skills/ssh-skill/SKILL.md .claude/skills/ssh-skill/bin ~/.claude/skills/ssh-skill/
@@ -86,11 +87,13 @@ Claude Code 会通过技能 / 受控 Bash 调用 `ssh-skill` CLI；此时由 **C
 
 ```bash
 # Use the build scripts (recommended):
-#   Linux/macOS: scripts/build.sh
-#   Windows:     scripts/build.ps1
-# Or build manually:
+#   ./scripts/build.sh          # Linux/macOS/Windows-Git-Bash，构建当前平台
+#   .\scripts\build.ps1         # Windows (PowerShell)
+# These output binaries with an <os>-<arch> suffix (e.g. ssh-skill-linux-amd64)
+# and never overwrite the `bin/ssh-skill` launcher.
+# Manual cross-compile (example):
 cd go
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
+GOOS=linux GOARCH=amd64 go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skill/
 ```
 
 ### 生产服务器
@@ -140,9 +143,15 @@ ssh-skill vault init
 
 ### 构建
 
+推荐使用构建脚本（输出带 `<os>-<arch>` 后缀，不会覆盖 `bin/ssh-skill` launcher）：
+
 ```bash
+./scripts/build.sh     # Linux/macOS/Windows-Git-Bash，构建当前平台
+.\scripts\build.ps1    # Windows (PowerShell)
+
+# 手动（指定平台）：
 cd go
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
+GOOS=linux GOARCH=amd64 go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skill/
 ```
 
 ### 运行测试
@@ -160,7 +169,7 @@ go test ./internal/audit/... -v    # 仅审计测试
 ```bash
 cd go
 go vet ./...                       # 静态分析
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/  # 编译验证
+go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skill/  # 编译验证（勿覆盖 bin/ssh-skill launcher）
 ```
 
 ## 排错

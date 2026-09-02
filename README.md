@@ -51,7 +51,7 @@ Secure SSH remote operations for AI agents (Claude Code / Codex).
 | 方式 | 大约下载 | 是否暴露全仓库到本机 |
 |------|----------|----------------------|
 | `git clone` 全量 | 全仓库 | 是 |
-| 短提示词 → `PROMPT.md` → 安装脚本 | 几 KB 指令 + **1 个**平台二进制（约 6MB） | 否（只取 skill 文件） |
+| 短提示词 → `PROMPT.md` → 安装脚本 | 几 KB 指令 + launcher + **1 个**平台二进制（约 6MB） | 否（只取 skill 文件） |
 
 仓库对公众仍可读；约束的是 **agent 安装路径只取 skill 与二进制**，不把源码树装进用户机器。
 
@@ -80,9 +80,13 @@ ssh-skill 已安装。请帮我完成首次配置：
 ~/.claude/skills/ssh-skill/
 ├── SKILL.md
 └── bin/
-    ├── ssh-skill          # Linux / macOS
-    └── ssh-skill.exe      # Windows
+    ├── ssh-skill                       # launcher（平台无关，统一入口）
+    ├── ssh-skill-linux-amd64           # Linux x86-64
+    ├── ssh-skill-darwin-amd64          # macOS x86-64
+    └── ssh-skill-windows-amd64.exe     # Windows x86-64
 ```
+
+> `bin/ssh-skill` 是平台无关 launcher，`SKILL.md` 一律调用它，由它按当前 OS 自动选择后面的真实二进制。每个平台实际只需 launcher + 该平台对应二进制。
 
 ## Manual Installation
 
@@ -94,11 +98,11 @@ ssh-skill 已安装。请帮我完成首次配置：
 git clone https://github.com/wjy2001/ssh-skill.git
 cd ssh-skill
 
-# Linux / macOS
+# Linux / macOS / Windows(Git Bash)——launcher 自动选择当前平台二进制
 .claude/skills/ssh-skill/bin/ssh-skill --version
 
-# Windows (PowerShell)
-.\.claude\skills\ssh-skill\bin\ssh-skill.exe --version
+# Windows (PowerShell) 请用完整二进制名：
+.\.claude\skills\ssh-skill\bin\ssh-skill-windows-amd64.exe --version
 ```
 
 ### Install the skill globally
@@ -119,17 +123,17 @@ Copy-Item .claude\skills\ssh-skill\SKILL.md, .claude\skills\ssh-skill\bin $env:U
 
 ```bash
 # Linux / macOS
-./scripts/build.sh
+./scripts/build.sh          # 构建当前平台，输出带 <os>-<arch> 后缀（如 ssh-skill-linux-amd64）
 
 # Windows (PowerShell)
-.\scripts\build.ps1
+.\scripts\build.ps1         # 输出 ssh-skill-windows-amd64.exe
 ```
 
-或手动：
+构建脚本会同步到 Codex 分发副本 `.agents/skills/ssh-skill/bin/`，且不会覆盖 `bin/ssh-skill` launcher。或手动：
 
 ```bash
 cd go
-go build -o ../.claude/skills/ssh-skill/bin/ssh-skill ./cmd/ssh-skill/
+GOOS=linux GOARCH=amd64 go build -o ../.claude/skills/ssh-skill/bin/ssh-skill-linux-amd64 ./cmd/ssh-skill/
 ```
 
 需要 Go 1.18+。
